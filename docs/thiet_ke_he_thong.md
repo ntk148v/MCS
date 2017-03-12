@@ -59,6 +59,97 @@ Dưới góc nhìn này, hệ thống bao gồm các thành phần chính sau:
 - SQL Database Server: Lưu trữ dữ liệu của hệ thống SCS
 - Các cloud: Tập hợp các cơ sở lưu trữ
 
+Để bắt đầu việc thiết kế hệ thống SCS, chúng ta đi vào phân tích nhiệm vụ chính của SCS: kết hợp tất cả các Cloud Storage Server của một User thành một kho lưu trữ thống nhất cho user đó.
+
+### Storage Cloud, Data Object và Chord Protocol
+
+Mục đích của việc tạo ra kho lưu trữ thống nhất, đó là cho phép người dùng hệ thống có thể sử dụng hệ thống để lưu trữ các data object hiệu quả mà không cần quan tâm tới việc object được lưu trữ như thế nảo ở hạ tầng lưu trữ bên dưới. Đó là cái nhìn ở góc độ người dùng. Còn ở góc độ người thiết kế hệ thống SCS, chúng ta hiểu rằng, bản chất của việc lưu trữ một Data Object vào hệ thống là việc lưu trữ các bản sao Data Object đó lên các cơ sở dữ liệu mà người dùng sở hữu, và nhiệm vụ của chúng ta là xây dựng các cơ chế để thực hiện công việc lưu trữ này một cách hiệu quả nhất. Các cơ chế được xây dựng để giải quyết các vấn đề sau:
+
+- Khi người dùng tài khoản này muốn lưu trữ một Data Object mới trên hệ thống, hệ thống sẽ sao lưu data Object trên thành bao nhiêu bản, và mỗi bản sao của Data Object trên sẽ được lưu trong Cloud nào trong số các Cloud mà tài khoản sở hữu?
+- Khi người dùng tài khoản muốn lấy từ hệ thống về nội dung của một Data Object, làm sao để chúng ta biết chúng ta có thể lấy nội dung Data Object này từ Cloud nào trong số các Cloud của tài khoản? (Lưu ý là một Data Object có nhiều bản sao lưu trên nhiều Cloud Server khác nhau)
+- Khi người dùng cập nhật nội dung của một Data Object, làm sao để hệ thống đồng bộ hóa giữa các bản sao của Object đó?
+- Khi một Cloud mới được người dùng thêm vào hệ thống, hoặc khi người dùng quyết định loại bỏ một Cloud khỏi hệ thống, chúng ta sẽ thực hiện việc di chuyển dữ liệu giữa các Cloud của người dùng như thế nào?
+
+Xuất phát từ việc giải quyết các vấn đề nêu trên, chúng ta sẽ xây dựng các cơ chế lưu trữ của hệ thống dựa trên nền tảng là một protocol cho phép các hệ thống phân tán lưu trữ, quản lý và truy vấn dữ liệu hiệu quả, đó là **Chord protocol**.
+
+Chord protocol được xây dựng xung xoay quanh 2 đối tượng **Node** và **Value**, và bài toán nền tảng mà Chord Protocol giải quyết là: Cho một đối tượng value **x** và một hệ thống có **n** node, value **x** sẽ được lưu vào node nào trong **n** node trên.
+
+Tại sao chúng ta lại lựa chọn Chord Protocol làm nền tảng để xây dựng các cơ chế lưu trữ của hệ thống ?
+
+#### Lý do lựa chọn Chord protocol
+
+### Xây dựng các cơ chế lưu trữ cho SCS trên nền tảng Chord Protocol
+
+#### Cloud Ring, Cloud Node và Data Object
+
+Áp dụng Chord protocol vào hệ thống của chúng ta:
+
+- Các **Node** trên Ring sẽ là các **Cloud** của User.
+- Các **Value** được lưu trữ trên các Node là các **Data Object** mà User cần lưu trữ trên hệ thống.
+
+Để sử dụng Chord Protocol, chúng ta sẽ chọn một **Consistent Hashing** để sinh ID cho các đối tượng trong hệ thống. Consistent Hashing được lựa chọn ở đây là SHA-1, và chúng ta sẽ ký hiệu phương thức Hashing sử dụng SHA-1 là ```SHA1_Hash()```.
+
+Sử dụng Chord Protocol, chúng ta bắt đầu xây dựng các cơ chế xử lý lưu trữ cho hệ thống. Đầu tiên, chúng ta sẽ sử dụng Chord Protocol để xây dựng Chord logic ring - **Cloud Ring**.
+
+#### Init Cloud Ring Process
+
+Để có thể xây dựng Cloud Ring cho một user trong hệ thống, chúng ta cần có thông tin **Cloud\_List**, là một danh sách các **Cloud Object**, để đại diện cho tập các Cloud mà user đó sở hữu. CloudObject chứa thuộc tính **Cloud\_Config** - là thông tin định danh của một Cloud. Thông tin định danh của một Cloud bao gồm: Loại Cloud (S3, SWift, Google Cloud, Ceph,...), thông tin xác thực (account, password, token,...), địa chỉ truy cập của Cloud (Ip Address, Port,...), ... Thông tin này sẽ được sử dụng để tạo ra ID cho Cloud đó.
+
+Quá trình xây dựng Cloud Ring từ tập các Cloud của user diễn ra như sau:
+
+- Đầu tiên chúng ta cần gán cho mỗi một Cloud một định danh **CloudID**. CloudID của một Cloud sinh ra dựa bằng cách sử dụng hàm băm SHA-1 hash thông tin định danh của Cloud đó (IP Address + Account name + Password + Container name...).
+- Sau khi tạo ra CloudID cho các Cloud, chúng ta xếp các Cloud lên Cloud Ring, lúc này các Cloud đóng vai trò là các **CloudNode** trong Chord Logic Ring rồi xác định các thông tin định tuyến: Successor Node, Previous Node, Finger Table... cho cho từng Cloud Node trên Cloud Ring theo quy tắc của Chord Protocol. Quá trình sắp xếp các Cloud lên Cloud Ring được thực hiện bằng cách đưa lần lượt các Cloud trong Cloud\_List join vào trong Cloud Ring theo thuận toán **Node\_Join** của Chord Protocol.
+
+##### _Algorithm1: InitCloudRing(Cloud\_List)_
+
+```javascript
+function InitCloudRing(Cloud_List){
+
+    // Create CloudID for each Cloud in Cloud List
+    for Cloud in Cloud_List:
+    {
+        Cloud_Identifier_Info = get_identifier_info(Cloud.Cloud_Config);
+        Cloud.CloudID = SHA1_hash(Cloud_Indentifier_Info);
+    }
+
+    // Init Cloud Ring by first Cloud in Cloud List
+    First_Cloud = Cloud_List.get_first_cloud();
+    Cloud_Ring = init_cloud_ring(First_Cloud);
+
+    // Put Other Clouds to Cloud Ring by Node Join
+    for Cloud in Cloud_List except First_Cloud:
+    {
+        Cloud.join_node_to_cloud_ring(Cloud_Ring);
+    }
+
+    return Cloud_Ring;
+}
+```
+
+Sau khi xây dụng xong Cloud Ring, chúng ta sẽ lưu thông tin Cloud Ring vào tài khoản User. Bước tiếp theo, chúng ta sẽ xây dựng cơ chế lưu trữ một Data Object lên hệ thống.
+
+#### Create Data Object
+
+Nguyên tắc xử lý lưu trữ một Data Object **x** lên hệ thống của chúng ta, đó là **x** phải được sao lưu **k** lần và lưu tại **k** Cloud trên hệ thống. Dựa theo nguyên tắc đó, quá trình xử lý lưu trữ 1 Data Object diễn ra như sau:
+
+- Đầu vào quá trình xử lý của chúng ta là 2 thông tin: tên của Data Object - **x.Object_Name** và nội dung của Data Object **x.Data**
+
+- Bước đầu tiên, chúng ta sẽ tạo ra một đối tượng **object metadata** tướng ứng với **x**. **Object metadata** được sử dụng để quản lý các bản sao của một data object cũng như hỗ trợ hệ thống thực hiện các thao tác truy cập, sửa đổi trên các bản sao cũng như thực hiện đồng bộ các bản sao với nhau. Object metadata của Data Object **k** chứa các thông tin sau:
+
+- Danh sách các key của các bản sao của **k**
+- Danh sách lịch sử các sửa đổi gần nhất lên các bản sao của **k**
+
+
+Chúng ta sẽ đặt tên cho các bản sao của **x** bằng cách gán thêm các hậu tố vào tên của x. Ví dụ
+
+Các Data Object sẽ có vai trò như các giá trị **Value** trong hệ thống sử dụng Chord Protocol. Do đó, để lưu trữ một Data Object **x**, đầu tiên hệ thống sẽ hash tên của các data Object để tạo thành ID cho Data Object x, tạo thành các cặp key-value lưu trữ trên các node - các cloud. Một data object có thể được sao lưu ra **x** bản sao, mỗi bản sao sẽ có một key riêng, và sẽ được đẩy vào **x** node - **x** cloud khác nhau.
+
+Các thao tác lưu trữ, di chuyển, cập nhật các data object được thực hiện theo các cơ chế được quy định trong Chord protocol.
+
+#### Create Data Object Process
+
+Quá trình hệ thống SCS xử lý yêu cầu tạo mới một Data Object có định danh là **x** được diễn ra như sau:
+
 Như đã giới thiệu, hệ thống của chúng ta được xây dựng để phục vụ cho các User. Vì vậy, đầu tiên chúng ta sẽ xác định thông tin của một User trong hệ thống.
 
 ### User Data Object
@@ -75,40 +166,8 @@ User Data là Object chứa thông tin về một tài khoản trên hệ thốn
             - Cloud Account Password
             - Additional Information (Switf Container name, S3 Folder, ...)
 
-Chúng ta đã xây dựng xong đối tượng chứa các thông tin cơ bản của một tài khoản trên hệ thống là thông tin xác thực của tài khoản, và thông tin về các Cloud Server mà tài khoản đó sở hữu. Bây giờ, chúng ta bắt đầu đi vào giải quyết nhiệm vụ chính của hệ thống SCS, đó là kết hợp tất cả các Cloud của một User thành một kho lưu trữ thống nhất.
-
-### Cloud Node, Data Object và Cloud Ring
-
-Mục đích của việc tạo ra kho lưu trữ thống nhất, đó là cho phép người dùng hệ thống có thể sử dụng hệ thống để lưu trữ các data object hiệu quả mà không cần quan tâm tới việc object được lưu trữ như thế nảo ở hạ tầng lưu trữ bên dưới. Đó là cái nhìn ở góc độ người dùng. Còn ở góc độ người thiết kế hệ thống SCS, chúng ta hiểu rằng, bản chất của việc lưu trữ một Data Object vào hệ thống là việc lưu trữ các bản sao Data Object đó lên các cơ sở dữ liệu mà người dùng sở hữu, và nhiệm vụ của chúng ta là xây dựng các cơ chế để thực hiện công việc lưu trữ này một cách hiệu quả nhất. Các cơ chế được xây dựng để giải quyết các vấn đề sau:
-
-- Khi người dùng tài khoản này muốn lưu trữ một Data Object mới trên hệ thống, hệ thống sẽ sao lưu data Object trên thành bao nhiêu bản, và mỗi bản sao của Data Object trên sẽ được lưu trong Cloud nào trong số các Cloud mà tài khoản sở hữu?
-- Khi người dùng tài khoản muốn lấy từ hệ thống về nội dung của một Data Object, làm sao để chúng ta biết chúng ta có thể lấy nội dung Data Object này từ Cloud nào trong số các Cloud của tài khoản? (Lưu ý là một Data Object có nhiều bản sao lưu trên nhiều Cloud Server khác nhau)
-- Khi người dùng cập nhật nội dung của một Data Object, làm sao để hệ thống đồng bộ hóa giữa các bản sao của Object đó?
-- Khi một Cloud mới được người dùng thêm vào hệ thống, hoặc khi người dùng quyết định loại bỏ một Cloud khỏi hệ thống, chúng ta sẽ thực hiện việc di chuyển dữ liệu giữa các Cloud của người dùng như thế nào?
-
-Xuất phát từ việc giải quyết các vấn đề nêu trên, chúng ta sẽ xây dựng các cơ chế lưu trữ của hệ thống dựa trên nền tảng là một protocol cho phép các hệ thống phân tán lưu trữ, quản lý và truy vấn dữ liệu hiệu quả, đó là **Chord protocol**.
-
-Chord protocol được sử dụng để thực hiện công việc sau: Cho một đối tượng value **x** và **n** node, Chord sẽ tạo một ID cho **x**, sau đó lưu **x** vào một trong **n** node trên theo Chord protocol. Áp dụng Chord protocol vào hệ thống của chúng ta:
-
-- Các **Node** trên Ring sẽ là các **Cloud** của User.
-- Các **Value** được lưu trữ trên các Node là các **Data Object** mà User cần lưu trữ trên hệ thống.
-
-Tại sao chúng ta lại lựa chọn Chord Protocol làm nền tảng để xây dựng các cơ chế lưu trữ của hệ thống ?
-
-#### Reason to chose Chord
-
-Chúng ta bắt đầu đi xây dựng các cơ chế lưu trữ cho hệ thống SCS.
-Cơ chế đầu tiên là xây dựng Chord logic ring - Cloud Ring cho một tài khoản mới được tạo ra trên hệ thống.
-
-#### Init Cloud Ring Process
-
-Trong quá trình khởi tạo account **x** trên hệ thống, chúng ta cần thực hiện công việc tạo ra Cloud Ring và update các **Cloud Node Information** cho account **x**. Sử dụng các thông tin định danh của các Cloud chứa trong Cloud List, quá trình **Init Cloud Ring Process** diễn ra như sau:
-
-Các Cloud sẽ được gán các ID, ID của một Cloud sinh ra dựa bằng cách sử dụng hàm băm SHA-1 hash thông tin định danh của Cloud đó. (ta sẽ kỹ hiệu hành động sử dụng hàm băm SHA-1 để sinh ID cho một chuỗi **x** đó là ```Hash```).
-
-- Tạo ra Cloud ID cho các Cloud bằng cách ```Hash``` thông tin định danh(IP Address + Account name + Password + Container name...) lưu trong Cloud Config của cloud đó.
-- Sau khi tạo ra Cloud ID cho các Cloud, xếp các Cloud ID này lên Chord Logic Ring, xác định Successor Node, Previous Node, Finger Table... cho các Cloud Node theo quy tắc của Chord Protocol
-- Lưu các thông tin được vừa được tạo ra vào **Cloud Node Information** của **Cloud Object** tương ứng.
+Những thuộc tính trên là đủ để chúng ta lưu trữu thông tin xác thực của tài khoản, và thông tin về các Cloud Storage Server mà tài khoản đó sở hữu. Nhiệm vụ tiếp theo của chúng ta, đó
+Trong quá trình thiết kế hệ thống cũng như thiết kế các thành phần trong hệ thống, các đối tượng mà chúng ta xây dựng sẽ liên tục được thay đổi và cập nhật cho đến khi mọi vấn đề trong hệ thống được giải quyết xong.
 
 #### _Algorithm 1: Create Account_
 
@@ -143,6 +202,7 @@ class CloudObject:
 ```
 
 Ở đây ta thấy có sự xuất hiện của các khái niệm **Cloud Ring** và **Cloud Node**. Ý nghĩa của chúng là gì? Phần tiếp theo sẽ giải đáp ý nghĩa của các khái niệm này.
+
 ```python
 
 def CreateAccount(User_Authentication, Cloud_Information_List):
@@ -159,20 +219,3 @@ def CreateAccount(User_Authentication, Cloud_Information_List):
 
 
 ```
-
-#### Create Data Object
-
-Để lưu trữ một Data Object **x**, đầu tiên hệ thống sẽ hash tên của các data Object để tạo thành ID cho Data Object x, tạo thành các cặp key-value lưu trữ trên các node - các cloud. Một data object có thể được sao lưu ra **x** bản sao, mỗi bản sao sẽ có một key riêng, và sẽ được đẩy vào **x** node - **x** cloud khác nhau.
-
-Các thao tác lưu trữ, di chuyển, cập nhật các data object được thực hiện theo các cơ chế được quy định trong Chord protocol.
-
-Để quản lý các bản sao của một data object và thực hiện các thao tác truy cập, sửa đổi trên các bản sao cũng như thực hiện đồng bộ các bản sao với nhau, thì khi xử lý lưu trữ một **data object**, hệ thống sẽ tạo ra một **object metadata** tương ứng với data object này. Object metadata của Data Object **k** chứa các thông tin sau:
-
-- Danh sách các key của các bản sao của **k**
-- Danh sách lịch sử các sửa đổi gần nhất lên các bản sao của **k**
-
-#### Create Data Object Process
-
-Quá trình hệ thống SCS xử lý yêu cầu tạo mới một Data Object có định danh là **x** được diễn ra như sau:
-
-
