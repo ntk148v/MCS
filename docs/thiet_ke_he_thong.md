@@ -128,27 +128,37 @@ function InitCloudRing(Cloud_List){
 
 Sau khi xây dụng xong Cloud Ring, chúng ta sẽ lưu thông tin Cloud Ring vào tài khoản User. Bước tiếp theo, chúng ta sẽ xây dựng cơ chế lưu trữ một Data Object lên hệ thống.
 
-#### Create Data Object
+#### Create Data Object x in SCS System
 
-Nguyên tắc xử lý lưu trữ một Data Object **x** lên hệ thống của chúng ta, đó là **x** phải được sao lưu **k** lần và lưu tại **k** Cloud trên hệ thống. Dựa theo nguyên tắc đó, quá trình xử lý lưu trữ 1 Data Object diễn ra như sau:
+Thông tin đầu vào cho quá trình lưu trữ Data Object **x**, đó là tên của Data Object - **x.Object_Name** và nội dung của Data Object **x.Data**. Sử dụng thông tin đầu vào này, việc đầu tiên chúng ta cần làm là giải quyết yêu cầu quan trọng nhất đối với việc lưu trữ Data Object **x** lên hệ thống của chúng ta, đó là: **x** phải được sao lưu thành **k** bản sao (giá trị của **k** sẽ do User thiết lập), và **k** bản sao này và lưu tại **k** Cloud trong số các Cloud mà người dùng có.(\*)
 
-- Đầu vào quá trình xử lý của chúng ta là 2 thông tin: tên của Data Object - **x.Object_Name** và nội dung của Data Object **x.Data**
+Chúng ta sẽ đáp ứng yêu cầu (\*) bằng cách tạo ra **k** bản sao, mỗi bản sao sẽ có một tên và ID riêng biết. Chúng ta sẽ đặt tên cho các bản sao của **x** bằng cách gán thêm các hậu tố **\_replica(i)** vào tên của x. Ví dụ với Data Object có tên là **data.png** thì các bản sao có thể có tên là **data.png\_replica1**, **data.png\_replica2**, **data.png\_replica3**,... (với k =3)
 
-- Bước đầu tiên, chúng ta sẽ tạo ra một đối tượng **object metadata** tướng ứng với **x**. **Object metadata** được sử dụng để quản lý các bản sao của một data object cũng như hỗ trợ hệ thống thực hiện các thao tác truy cập, sửa đổi trên các bản sao cũng như thực hiện đồng bộ các bản sao với nhau. Object metadata của Data Object **k** chứa các thông tin sau:
+Lúc này, các replica của **x** sẽ có vai trò như các giá trị **Value** trong hệ thống sử dụng Chord Protocol. Để lưu trữ các replica của **x**, hệ thống sẽ hash tên của các replica (vừa được tạo ra ở bước trước) để tạo thành **replicaID** cho các replica này. Saud đó, cặp \<**replicaID**,**x.Data**\> sẽ tạo thành các **Key-Value** trong hệ thống Chord Protocol. Sau đó, hệ thống SCS sẽ sử dụng Chord Protocol để tìm ra Successor Node tương ứng với **replicaID** của từng cặp \<**replicaID**,**x.Data**\>. Cloud tương ứng với Sucessor Nodeđó sẽ được chọn để lưu trữ cặp \<**replicaID**,**x.Data**\> này.
 
-- Danh sách các key của các bản sao của **k**
-- Danh sách lịch sử các sửa đổi gần nhất lên các bản sao của **k**
+Sau khi giải quyết yêu cầu (*), chúng ta sẽ xem các vấn đề tiếp theo mà chúng ta phải xử lý khi lưu trữ Data Object **x**:
 
+- Theo yêu cầu (\*), thì Data Object **x** sẽ được sao lưu **k** lần và lưu tại **k** Cloud trên hệ thống. Do vậy, chúng ta cần phải có cách để lưu trữ các ID của các bản sao của x, cũng như trạng thái của các bản sao này (lần cập nhật cuối cùng, trạng thái hiện tại, tốc độ truy cập...)
+- Để thực hiện quá trình đồng bộ dữ liệu, chúng ta cần lưu trữ lại danh sách các lần cập nhật gần đây nhất của Data Object **x**, do trong quá trình cập nhật, chỉ có một bản sao trong **k** bản sao được cập nhật, các bản sao khác được cập nhật khi thực hiện đồng bộ. Quá trình đồng bộ sẽ dựa trên danh sách cập nhật này để tiến hành đồng bộ hóa nội dung các bản sao.
+- Trong khoảng thời gian từ lúc một bản sao được cập nhật nội dung cho tới khi hệ thống thực hiện việc đồng bộ các bản sao, hệ thống vẫn phải thực hiện việc phản hồi các yêu cầu truy cập tới data Object. Tuy nhiên, trong khoảng thời gian này, nội dung của các bản sao là không giống nhau, vậy hệ thống sẽ trả về cho người dùng nội dung của bản sao nào ? Để giải quyết điều này, chúng ta phải lưu trữ lại bản sao nào được cập nhật cuối cùng. Đây sẽ là bản sao mà hệ thống trả lại cho người dùng.
 
-Chúng ta sẽ đặt tên cho các bản sao của **x** bằng cách gán thêm các hậu tố vào tên của x. Ví dụ
+Chúng ta có thể thấy, để xử lý các vấn đề đã nêu ra, chúng ta phải có cơ chế để lưu trữ các thông tin liên quan tới Data Object x. Giải pháp được sử dụng trong hệ thống SCS, đó là trong quá trình lưu trữ Data Object **x**, đối tượng **Object metadata** sẽ được tạo ra để lưu trữ các thông tin liên quan tới **x**. **Object metadata** của **x** được sử dụng để quản lý các bản sao Data Object **x** cũng như hỗ trợ hệ thống thực hiện các thao tác truy cập, cập nhật và đồng bộ trên **x**. **Object metadata** của **x** chứa các thông tin sau:
 
-Các Data Object sẽ có vai trò như các giá trị **Value** trong hệ thống sử dụng Chord Protocol. Do đó, để lưu trữ một Data Object **x**, đầu tiên hệ thống sẽ hash tên của các data Object để tạo thành ID cho Data Object x, tạo thành các cặp key-value lưu trữ trên các node - các cloud. Một data object có thể được sao lưu ra **x** bản sao, mỗi bản sao sẽ có một key riêng, và sẽ được đẩy vào **x** node - **x** cloud khác nhau.
+- ID của **x**
+- Tên của Data Object **x**
+- Số lượng các bản sao của x và thông tin về các bản sao của **x**
+- Danh sách lịch sử các cập nhật gần đây được thực hiện trên **x**
+- Các thông tin khác liên quan tới **x**...
 
-Các thao tác lưu trữ, di chuyển, cập nhật các data object được thực hiện theo các cơ chế được quy định trong Chord protocol.
+**Object metadata** của x cùng với các bản sao của x là toàn bộ thông tin của Data Object **x** trên hệ thống.
+
 
 #### Create Data Object Process
 
 Quá trình hệ thống SCS xử lý yêu cầu tạo mới một Data Object có định danh là **x** được diễn ra như sau:
+
+Các thao tác lưu trữ, di chuyển, cập nhật các data object được thực hiện theo các cơ chế được quy định trong Chord protocol.
+
 
 Như đã giới thiệu, hệ thống của chúng ta được xây dựng để phục vụ cho các User. Vì vậy, đầu tiên chúng ta sẽ xác định thông tin của một User trong hệ thống.
 
