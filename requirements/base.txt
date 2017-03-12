@@ -5,5 +5,3 @@
 Django
 
 django-model-utils
-
-psycopg2
