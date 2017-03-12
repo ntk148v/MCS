@@ -128,21 +128,43 @@ function InitCloudRing(Cloud_List){
 
 Sau khi xây dụng xong Cloud Ring, chúng ta sẽ lưu thông tin Cloud Ring vào tài khoản User. Bước tiếp theo, chúng ta sẽ xây dựng cơ chế lưu trữ một Data Object lên hệ thống.
 
-#### Create Data Object x in SCS System
+### Process Data Object x in SCS System
 
-Thông tin đầu vào cho quá trình lưu trữ Data Object **x**, đó là tên của Data Object - **x.Object_Name** và nội dung của Data Object **x.Data**. Sử dụng thông tin đầu vào này, việc đầu tiên chúng ta cần làm là giải quyết yêu cầu quan trọng nhất đối với việc lưu trữ Data Object **x** lên hệ thống của chúng ta, đó là: **x** phải được sao lưu thành **k** bản sao (giá trị của **k** sẽ do User thiết lập), và **k** bản sao này và lưu tại **k** Cloud trong số các Cloud mà người dùng có.(\*)
+Trong quá trình thiết kế cơ chế lưu trữ Data Object cho hệ thống SCS, chúng ta sẽ gặp và phải giải quyết hàng loạt vấn đề liên quan tới các tác vụ xung quanh Data Object, như các tác vụ lưu trữ, cập nhật, truy cập, xóa bỏ (CRUD process), cân bằng tải,vv..., cũng như hàng loạt các các yêu cầu đặt ra cho hệ thống về tốc độ - hiệu năng, tính high-available, tính replication - consistency của data,... khi hệ thống thực hiện các tác vụ nói trên. Chúng ta sẽ phân tích các vấn đề trên và tìm giải pháp để thiết kế một cơ chế lưu trữ phù hợp với các yêu cầu đã được đặt ra.
 
-Chúng ta sẽ đáp ứng yêu cầu (\*) bằng cách tạo ra **k** bản sao, mỗi bản sao sẽ có một tên và ID riêng biết. Chúng ta sẽ đặt tên cho các bản sao của **x** bằng cách gán thêm các hậu tố **\_replica(i)** vào tên của x. Ví dụ với Data Object có tên là **data.png** thì các bản sao có thể có tên là **data.png\_replica1**, **data.png\_replica2**, **data.png\_replica3**,... (với k =3)
+#### Create Data Object Process
+
+Vấn đề đầu tiên chúng ta giải quyết, đó là lưu trữ một Data Object **x** mới lên hệ thống, với thông tin đầu vào là  **x.Object\_Name** và **x.Data**. Quá trình lưu trữ **x** lên hệ thống của chúng ta phải đảm bảo yêu cầu sau: **x** phải được sao lưu thành **k** bản sao (giá trị của **k** sẽ do User thiết lập), và **k** bản sao này và lưu tại **k** Cloud trong số các Cloud mà người dùng có.(\*)
+
+Chúng ta sẽ đáp ứng yêu cầu (\*) bằng cách tạo ra **k** bản sao, mỗi bản sao sẽ có một tên và ID riêng biết. Chúng ta sẽ đặt tên cho các replica của **x** bằng cách gán thêm các hậu tố **\_replica(i)** vào tên của x. Ví dụ với Data Object có tên là **data.png** thì các bản sao có thể có tên là **data.png\_replica1**, **data.png\_replica2**, **data.png\_replica3**,... (với k =3)
 
 Lúc này, các replica của **x** sẽ có vai trò như các giá trị **Value** trong hệ thống sử dụng Chord Protocol. Để lưu trữ các replica của **x**, hệ thống sẽ hash tên của các replica (vừa được tạo ra ở bước trước) để tạo thành **replicaID** cho các replica này. Saud đó, cặp \<**replicaID**,**x.Data**\> sẽ tạo thành các **Key-Value** trong hệ thống Chord Protocol. Sau đó, hệ thống SCS sẽ sử dụng Chord Protocol để tìm ra Successor Node tương ứng với **replicaID** của từng cặp \<**replicaID**,**x.Data**\>. Cloud tương ứng với Sucessor Nodeđó sẽ được chọn để lưu trữ cặp \<**replicaID**,**x.Data**\> này.
 
-Sau khi giải quyết yêu cầu (*), chúng ta sẽ xem các vấn đề tiếp theo mà chúng ta phải xử lý khi lưu trữ Data Object **x**:
+Một vấn đề xảy ra ở đây, đó là có thể xảy ra trường hợp Cloud Node của một replicaID nào đó đã bị đầy - không thể chứa thêm Object nữa, hoặc không đủ khả năng để chứa Object này. Giải pháp của chúng ta trong trường hợp này, đó là trước khi lưu một replica của x vào một Cloud Node là Successor Node của replicaID, chúng ta cần kiểm tra xem Cloud Node đó có đủ khả năng lưu trữ replica đó không. Nếu trong trường hợp Cloud Node không có đủ khả năng lưu trữ replica của x, chúng ta sẽ sinh ra một tên khác cho replica này và tạo ra một ReplicaID mới, sao cho replica này sẽ được lưu vào một Cloud Node khác có đủ khả năng chứa nó. Trong một số trường hợp khi hệ thống quá tải (Ví dụ khi có quá nhiều Cloud Node trong hệ thống không còn đủ khả năng lưu trữ Data Object mới), chúng ta có thể cảnh báo User về tình trạng hệ thống.
 
-- Theo yêu cầu (\*), thì Data Object **x** sẽ được sao lưu **k** lần và lưu tại **k** Cloud trên hệ thống. Do vậy, chúng ta cần phải có cách để lưu trữ các ID của các bản sao của x, cũng như trạng thái của các bản sao này (lần cập nhật cuối cùng, trạng thái hiện tại, tốc độ truy cập...)
-- Để thực hiện quá trình đồng bộ dữ liệu, chúng ta cần lưu trữ lại danh sách các lần cập nhật gần đây nhất của Data Object **x**, do trong quá trình cập nhật, chỉ có một bản sao trong **k** bản sao được cập nhật, các bản sao khác được cập nhật khi thực hiện đồng bộ. Quá trình đồng bộ sẽ dựa trên danh sách cập nhật này để tiến hành đồng bộ hóa nội dung các bản sao.
-- Trong khoảng thời gian từ lúc một bản sao được cập nhật nội dung cho tới khi hệ thống thực hiện việc đồng bộ các bản sao, hệ thống vẫn phải thực hiện việc phản hồi các yêu cầu truy cập tới data Object. Tuy nhiên, trong khoảng thời gian này, nội dung của các bản sao là không giống nhau, vậy hệ thống sẽ trả về cho người dùng nội dung của bản sao nào ? Để giải quyết điều này, chúng ta phải lưu trữ lại bản sao nào được cập nhật cuối cùng. Đây sẽ là bản sao mà hệ thống trả lại cho người dùng.
+**Cần thảo luận thêm với thầy**
+Tuy nhiên, có một vấn đề phát sinh ở đây, đó là chúng ta không hoàn toàn đảm bảo rằng, **k** key được sinh ra sẽ luôn luôn nằm trên **k** Cloud khác nhau, do chúng ta không thể nào điều khiển được replicaID nhận được sau khi hashing replica_name sẽ rơi vào node nào trên ring ?
+Đặt ID cho Node/Replica, sau đó lưu lại lastID used trong Node ?
 
-Chúng ta có thể thấy, để xử lý các vấn đề đã nêu ra, chúng ta phải có cơ chế để lưu trữ các thông tin liên quan tới Data Object x. Giải pháp được sử dụng trong hệ thống SCS, đó là trong quá trình lưu trữ Data Object **x**, đối tượng **Object metadata** sẽ được tạo ra để lưu trữ các thông tin liên quan tới **x**. **Object metadata** của **x** được sử dụng để quản lý các bản sao Data Object **x** cũng như hỗ trợ hệ thống thực hiện các thao tác truy cập, cập nhật và đồng bộ trên **x**. **Object metadata** của **x** chứa các thông tin sau:
+Thứ hai, là có luôn cần đảm bảo **k** bản sao phải nằm trên **k** node khác nhau (một cách tuyệt đối ?) Nếu không cần thì ta tiếp tục sử dụng cách cũ.
+**Cần thảo luận thêm với thầy**
+
+#### Lookup Data Object Process
+
+Vấn đề tiếp theo mà chúng ta cần giải quyết, đó là sau khi Data Object **x** đã được lưu trên hệ thống, làm sao để User có thể truy cập tới nội dung của **x** thông qua hệ thống của chúng ta, với tham số truyền vào là tên của Data Object **x** - **x.Object\_Name**?
+
+Sau phần giải quyết vấn đề lưu trữ một Data Object mới lên hệ thống, chúng ta hiểu rằng một Data Object **x** bất kỳ sẽ có **k** replica lưu trên **k** Cloud Server, mỗi một replica có một **replicaID** riêng, và chỉ cần có được một trong số các replicaID là chúng ta có thể sử dụng Cloud Ring để tìm và lấy được nội dung của Data Object **x**. Tuy nhiên, chúng ta thấy rằng, không có cách nào để sinh ra trực tiếp replicaID từ tên của Data Object **x**. Do vậy, chúng ta cần phải có cách để lưu trữ các thông tin về các replica của **x**, hay nói cách khác chính là các **replicaID**.
+
+Thông tin về các Replica của **x** cũng chính là các thông tin liên quan tới **x**, chúng được gọi là **Object metadata** của **x**. Vì vậy, giải pháp được sử dụng trong hệ thống SCS để thực hiện tác vụ Lookup và Get Data Object **x**, đó là tạo ra và lưu trữ đối tượng **Object metadata** của x. **Object metadata** của x sẽ lưu trữ các thông tin liên quan tới **x**, với vấn đề Lookup Data Object của chúng ta, thông tin về các bản sao của **x** và **x.Object\_Name** sẽ được lưu vào Object metadata.
+
+Quá trình lookup **cơ bản** sẽ diễn ra như sau: Khi nhận được lookup request, SCS sẽ lấy ra thông tin **Object\_Name** từ request, và tìm trong cơ sở dữ liệu **Object Metadata** nào tương ứng với **Object\_Name** này. Sau đó SCS sẽ lấy ra một **replicaID** trong số các **replicaID** của Object đó, và dựa vào thuật toán Lookup của Chord Protocol để tìm xem Cloud Node nào đang chứa replica tương ứng với replicaID này (replicaID's successor Node). Bước cuối cùng, SCS Server trả về cho User các thông tin cần thiết như: replicaID và thông tin định danh của Cloud  để User có thể kết nối trực tiếp tới Cloud Server để lấy nội dung của Data Object **x** về. Cơ chế tương tác trực tiếp giữa User và Cloud Server cho phép dữ liệu không cần phải đi qua hệ thống trung gian là SCS, qua đó giảm tải cho hệ thống SCS cũng như tăng hiệu năng truy cập, vì cách User truy cập trực tiếp tới Cloud Server sẽ nhanh hơn việc chúng ta phải lấy nội dung Object từ Cloud Server về SCS, sau đó lại từ SCS trả nội dung Object về User.
+
+Như vậy, chúng ta đã xây dựng quy trình xử lý cơ bản cho thao tác Lookup Data Object. Tuy nhiên, như chúng ta đã nói ở phần đầu, các thao tác trên Data Object phải đảm bảo về các tính chất của hệ thống phân tán như tính High-available, cũng như giải quyết vấn đề cân bằng tải. Trong thao tác Lookup Data Object, 2 tính chất trên biểu hiện cụ thể thông qua 2 kịch bản sau:
+
+- Thứ nhất, chúng ta xử lý ra sao khi một Replica của Data Object mà chúng ta muốn truy cập bị hỏng, do Cloud Node chứa Replica đó gặp sự cố (đánh dấu replica đó đang bị hỏng/ lập lịch để tạo ra 1 replica khác trên 1 cloud Node khác). Vấn đề kiểm tra trong các Cloud Node, có Cloud Node nào gặp sự cố không được SCS lập lịch để thực hiện. Ví dụ cứ 1 phút kiểm tra lại toàn bộ các Cloud của User A, xem có cloud nào có vấn đề gì không,nếu có vấn đề cập nhật vào thông tin của Cloud đó. chứ không để tới khi Truy cập vào một Data Object nào đó mới thực hiện việc kiểm tra, vì cách này sẽ tạo ra quá nhiều request kiểm tra.
+- Thứ 2, chúng ta xử lý ra sao khi có quá nhiều truy cập vào một Data Object trong một khoảng thời gian ngắn ? (cân bằng tải giữa các replica)?
+
+**Object metadata** của **x** chứa các thông tin sau:
 
 - ID của **x**
 - Tên của Data Object **x**
@@ -152,6 +174,14 @@ Chúng ta có thể thấy, để xử lý các vấn đề đã nêu ra, chúng
 
 **Object metadata** của x cùng với các bản sao của x là toàn bộ thông tin của Data Object **x** trên hệ thống.
 
+### Get Data Object Process
+
+cũng như trạng thái của các bản sao này (lần cập nhật cuối cùng, trạng thái hiện tại, tốc độ truy cập...)
+
+### Update Data Object Process
+
+- Để thực hiện quá trình đồng bộ dữ liệu, chúng ta cần lưu trữ lại danh sách các lần cập nhật gần đây nhất của Data Object **x**, do trong quá trình cập nhật, chỉ có một bản sao trong **k** bản sao được cập nhật, các bản sao khác được cập nhật khi thực hiện đồng bộ. Quá trình đồng bộ sẽ dựa trên danh sách cập nhật này để tiến hành đồng bộ hóa nội dung các bản sao.
+- Trong khoảng thời gian từ lúc một bản sao được cập nhật nội dung cho tới khi hệ thống thực hiện việc đồng bộ các bản sao, hệ thống vẫn phải thực hiện việc phản hồi các yêu cầu truy cập tới data Object. Tuy nhiên, trong khoảng thời gian này, nội dung của các bản sao là không giống nhau, vậy hệ thống sẽ trả về cho người dùng nội dung của bản sao nào ? Để giải quyết điều này, chúng ta phải lưu trữ lại bản sao nào được cập nhật cuối cùng. Đây sẽ là bản sao mà hệ thống trả lại cho người dùng.
 
 #### Create Data Object Process
 
