@@ -65,7 +65,7 @@
 - Lựa chọn replica trong dánh sách các replica.
 - Sử dụng Chord protocol, đẩy replica id vào trong CloudRing để tiến hành lookup.
   Biết được CloudServer đang chứa replica, tiến hành gửi Request GET xuống
-  CloudServer đó. 
+  CloudServer đó.
 - Đầu ra: Download file. Thông báo download thành công hay không.
 
 ##7. Kịch bản Update file.
@@ -79,8 +79,8 @@
   cập nhật. Chuyển trạng thái của replica về updated = True, các replica khác
   updated = False. Khi có request đến SCS, yêu cầu file này, request sẽ được chuyển
   hướng ưu tiên đến replica với trạng thái updated = True.
-- Định kỳ, sau một khoảng thời gian t, tiếp tục đẩy bản update trong cache queue đến
-  các replica còn lại. Cập nhật trạng thái sau khi đẩy xong, updated = True.
+- Định kỳ, sau một khoảng thời gian t, `daemon process` tiếp tục đẩy bản update trong
+  cache queue đến các replica còn lại. Cập nhật trạng thái sau khi đẩy xong, updated = True.
   (Những thông tin về trạng thái sẽ được lưu dưới DB). Khi tất cả các replica có
   trạng thái updated = True, loại bỏ bản update khỏi cache queue.
 - Đầu ra: Thông báo update thành công hay không(ngay sau khi cập nhật replica đầu tiên)
@@ -107,3 +107,10 @@
 - Đầu ra: Thông báo thay đổi thành công hay không. Hiển thị thay đổi.
 
 ##11. Quản lý các user (admin-optional)
+
+##12. Kiểm tra status của các CloudServer.
+
+- Giải pháp: `daemon process` định kỳ bản tin về phía CloudServer.
+- Ping đến CloudServer?
+- Bắn bản tin đến CloudServer theo ip và port. (Với AmazonS3?)
+- Check health qua API?
