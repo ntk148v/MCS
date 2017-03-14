@@ -40,11 +40,17 @@
   Số lượng replica sẽ được config trước đó.
 - Hệ thống tiếp tục hashing replica name, tạo các id của replica.
 - Lưu các thông tin về id, danh sách replicas (đi kèm trạng thái hiện tại
-  replica: updated or not_update) và lịch sử giao dịch và database.
+  replica: updated = True or False) và lịch sử giao dịch và database.
 - Dựa vào id của các replica, tìm các CloudServer trong CloudRing sẽ lưu
   content (Cần có cơ chế tránh lưu các replica trong cùng một CloudServer).
   Tiến hành đẩy request PUT content về phía CloudServer.
-- Sau khi PUT thành công tại 1 replica, cập nhật trạng thái replica = updated.
+- Sau khi PUT thành công tại 1 replica, cập nhật trạng thái replica.updated = True.
+- Khi tất cả các replica được PUT thành công, cập nhật trạng thái của DataObject.
+
+```python
+  dataobject.synced = all(replica.updated = True for replica in dataobject.replicas)
+```
+
 - Đầu ra: Thông báo tạo thành công hay không.. Hiển thị file ra giao diện.
 
 ##5. Kịch bản Xóa file.
@@ -66,7 +72,7 @@
 - Lựa chọn replica trong dánh sách các replica.
 - Sử dụng Chord protocol, đẩy replica id vào trong CloudRing để tiến hành lookup.
   Biết được CloudServer đang chứa replica, tiến hành gửi Request GET xuống
-  CloudServer đó.
+  CloudServer đó. Ưu tiên chọn những replica.updated = True.
 - Đầu ra: Download file. Thông báo download thành công hay không.
 
 ##7. Kịch bản Update file.
@@ -84,7 +90,13 @@
   cache queue đến các replica còn lại (Cần có cơ chế tránh lưu các replica trong
   cùng một CloudServer). Cập nhật trạng thái sau khi đẩy xong, updated = True.
   (Những thông tin về trạng thái sẽ được lưu dưới DB). Khi tất cả các replica có
-  trạng thái updated = True, loại bỏ bản update khỏi cache queue.
+  trạng thái updated = True, loại bỏ bản update khỏi cache queue và chuyển trạng thái
+  của DataObject: synced = True.
+
+```python
+  dataobject.synced = all(replica.updated = True for replica in dataobject.replicas)
+```
+
 - Đầu ra: Thông báo update thành công hay không(ngay sau khi cập nhật replica đầu tiên)
 
 ##8. Kịch bản Thêm mới CloudServer.
@@ -92,6 +104,12 @@
 - Đầu vào: User chọn Thêm CloudServer vào CloudRing. Nhập vào cấu hình cloud
   (Cloud config, ip address...)
 - Join CloudServer vào CloudRing (theo cơ chế join node trong Chord).
+- Cập nhật lại vị trí các replica nằm sai vị trí. Di chuyển.
+- Trong thời gian di chuyển, những replica cần được di chuyển đánh dấu là
+  updated = False và DataObject vẫn sẽ trong trạng thái chưa đồng bộ
+  xong. Tuy nhiên, khi đang cập nhật như vậy, có request đến DataObject
+  đó. Và các replica đều đang cập nhật. --> Thông báo ng dùng chờ? [bad
+  idea].
 - Lưu thông tin CloudServer vào database.
 - Đầu ra: Thông báo thêm thành công hay không.
 
@@ -99,6 +117,8 @@
 
 - Đầu vào: User lựa chọn CloudServer cần loại bỏ khỏi CloudRing.
 - Thực hiện Leave CloudRing (Theo cơ chế leave trong Chord).
+- Khi 1 CloudServer leave CloudRing, cập nhật các replica trong CloudServer đó
+  updated = False. Điều hướng request (nếu có) đến các replica updated = True.
 - Xóa thông tin về CloudServer đó khỏi DB.
 - Đầu ra: Thông báo xóa thành công hay không.
 
