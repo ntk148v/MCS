@@ -77,16 +77,27 @@ Một đối tượng DataObject là đại diện cho một file/object trên h
 
 - Id: Sẽ lấy Name -> SHA-1 -> id.
 - Name: tên, đường dẫn object.
+- synced (default = False): True khi tất cả các replica đều có updated = True.
+
+```python
+  dataobject.synced = all(replica.updated = True for replica in dataobject.replicas)
+```
+
 - Danh sách các bản sao và trạng thái hiện tại của các bản sao. (Số lượng bản sao sẽ do người dùng quyết định nhưng nằm trong một khoảng xác định) Ví dụ:
 
 ```python
     replicas = {
-        'replica_01_id': 'updated', # Nếu là bản cập nhật cuối cùng
-        'replica_02_id': 'not_updated',
+        replica_01, # Đối tượng Replica (mục 5.5)
+        replica_02,
         ...
     }
 ```
 - Lịch sử giao dịch, thay đổi.
 
+## 5.5. Replica.
 
+Một đối tượng replica là đại diện replica của DataObject, chính ra là một object(key trong trường hợp Amazon S3)
+ở dưới tầng Physical các CloudServer bên dưới.
 
+- Id.
+- updated (default = False)
