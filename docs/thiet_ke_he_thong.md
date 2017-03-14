@@ -236,11 +236,26 @@ Cơ chế xóa một Data Object trên hệ thống: Đưa thông tin của Data
 
 - Bước 1: Đánh dấu Data Object bị xóa bằng cách thiết lập **is_deleted = True** trong Object Metadata
 - Bước 2: Thiết lập một Deamon Process định kỳ thực hiện công việc sau:
-    - Lấy ra một Data Object từ **Wait\_Delete\_Deplica\_List**.
+    - Lấy ra một Data Object từ **Wait\_Delete\_Replica\_List**.
     - Xóa các bản sao của Data Object đó.
-    - Xóa Object Metadata của Data Object đó.
+    - Xóa Object Metadata của Data Object đó sau khi đã xóa mọi Object Metadata.
 
-**Note**: Trong qúa trình lookup, SCS cần kiểm tra xem Data Object đã bị xóa hay chưa bằng cách đọc giá trị của thuộc tinhsg **is\_deleted**. Nếu Data Object đã bị xóa, hệ thống thông báo lại cho người dùng.
+**Note**: Trong qúa trình lookup, SCS cần kiểm tra xem Data Object đã bị xóa hay chưa bằng cách đọc giá trị của thuộc tính **is\_deleted**. Nếu Data Object đã bị xóa, hệ thống thông báo lại cho người dùng.
+
+
+
+#### 3.5.5 Update Data Object Name Process
+
+Một thao tác nữa mà chúng ta cần phải xử lý, đó là đổi tên của Data Object **x**. Thao tác này xảy ra khi người dùng muốn đổi tên Data Object **x** từ **name\_1** sang **name\_2**.
+
+Để xử lý thao tác này, chúng ta cập nhật trong Object Metadata tên của Data Object **x** sang tên mới, đồng thời tạo lại Object Metadata ID theo tên mới của **x**.
+
+Một vấn đề đặt ra ở đây, đó là khi chúng ta thay tên của **x** như vậy, liệu chúng ta có phải đặt lại **replicaID** cho các replica của **x** hay không ? Vì nếu như sau này người dùng lại tên của **x** là **name\_1** cho một Data Object mới, thì sẽ xảy ra khả năng 2 Data Object có một replicaID trùng nhau, trong trường hợp chúng ta dùng tên cơ sở là tên của Data Object + hậu tố để hash tạo ra replicaID ?
+
+Giải pháp đề xuất:
+
+- Tên cơ sở để tạo ra replicaID là tên Data Object lúc khởi tạo + **time\_stamp** là thời gian Data Object đó được tạo ra.
+- replicaID được tạo ra bằng một cách khác - không sử dụng hàm hashing để tạo ra, có thể dùng giải pháp như **auto-increment** ?
 
 ### 3.6 Process Cloud Node Join and Leave Events in SCS System
 
@@ -325,5 +340,40 @@ Kiểu lưu trữ được sử dụng trong hệ thống SCS là Object Storage
 Để tạo ra các Folder, chúng ta sẽ lưu các Folder có trong kho lưu trữ của người dùng dưới dạng một Data Object. Data Object này sẽ có nội dung là các thông tin về các File, Folder con mà Folder này chứa - File/Sub Folder Name và đường dẫn tới Object Metadata của các File/ Sub Folder đó.
 
 Chúng ta sẽ định nghĩa các cơ chế xử lý các thao tác trên đối tượng Folder ở phần dưới đây.
+
+#### 3.9.1 Create Folder Object
+
+Một đối tượng Folder Object được tạo ra khi người dùng gửi lên yêu cầu tạo ra một folder. Tên của một Folder Object sẽ phải kết thúc bằng dấu **\/**. Nội dung bên trong một folder Object sẽ là tên + định danh/ địa chỉ truy cập của các object (Cả các Data Object thông thường  và Folder Object) nằm trong Folder đó.
+
+Một vấn đề xảy ra ở đây là chúng ta cần có thư mục gốc cho tài khoản User. Các thông tin về thư mục gốc (Định danh, địa chỉ truy cập) sẽ nằm trong thông tin về User, tức là thư mục gốc sẽ được tạo ra ngay trong quá trình tạo một User mới.
+
+Từ vấn đề các Data Object có thể nằm trong một Folder nào đó, chúng ta nhận thấy sẽ  một vấn đề sẽ xảy ra trong quá trình tạo mới một Data Object:
+
+Lấy một trường hợp cụ thể: Ta có cấu trúc thư mục như sau:
+
+![directory_example.png](./images/directory_example.png)
+
+**Vấn đề thứ nhất**: Khi đã có kiến trúc cây thư mục, làm sao để chúng ta phân biệt được 2 File cùng tên nằm trong 2 thư mục khác nhau?
+
+Giải pháp đề xuất:  tên của Data Object trên hệ thống đều phải là tên tuyệt đối. Ví dụ như trong cấu trúc cây thư mục phía trên, file ```note.txt``` thực chất sẽ có tên là ```/Webserver/Images/note.txt```. Client sẽ truy cập tới Object thông qua tên tuyệt đối này.
+
+**Vấn đề thứ hai**: Khi đã sử dụng một cấu trúc cây thư mục, thì khi một Data Object **x** được tạo ra trong một Folder, thì nội dung Folder chứa Data Object x phải được cập nhật bằng cách thêm 1 entry chứa thông tin về  **x**
+
+Nội dung của một **Folder Object** sẽ được thiết kế bao gồm:
+
+- Danh sách thông tin về các Folder / Object là con của Folder Object đó
+
+
+#### 3.9.2 Update Folder Object Name
+
+Tiếp theo, chúng ta cần xây dựng cơ chế để cập nhật tên một Folder
+
+Giải pháp đề xuất: Khi một Folder đổi tên, tất cả mọi File/Folder nằm bên trong Folder và các Folder con của Folder đó đều bị cập nhật Object Metadata và đổi tên sang tên tương ứng với tên Folder mới.
+
+Ví dụ, khi ta đổi tên Folder ```Images``` thành ```Photos```, tất cả 6 File/Folder chứa trong ```Images``` và các thư mục con của ```Images``` đều phải cập nhật tên, ví dụ File ```Football.png``` phải cập nhật tên mới là ```/Webserver/Photos/Sports/Football.png```
+
+#### 3.9.3 Delete Folder Object
+
+Quá trình xử lý xóa một Folder được thực hiện bằng cách xóa tất cả mọi Data Object nằm trong Folder và các Folder con của Folder đó.
 
 ## 4. Thiết kế Biểu đồ lớp - Class Diagram của hệ thống
