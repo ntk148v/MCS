@@ -36,13 +36,14 @@
 - User cung cấp, chọn file cần upload và filename.
 - Hệ thống tiếp nhận file, tách thành 2 phần filename và content. filename sẽ
   được hashing tạo nên id cho file. Sau đó tạo các replica bằng cách thêm
-  hậu tố, ví dụ filename "this_is_object.txt" --> "this_is_object_01.txt" ,...
+  hậu tố, ví dụ filename "this\_is\_object.txt" --> "this\_is\_object_01.txt" ,...
   Số lượng replica sẽ được config trước đó.
 - Hệ thống tiếp tục hashing replica name, tạo các id của replica.
 - Lưu các thông tin về id, danh sách replicas (đi kèm trạng thái hiện tại
   replica: updated or not_update) và lịch sử giao dịch và database.
 - Dựa vào id của các replica, tìm các CloudServer trong CloudRing sẽ lưu
-  content. Tiến hành đẩy request PUT content về phía CloudServer.
+  content (Cần có cơ chế tránh lưu các replica trong cùng một CloudServer).
+  Tiến hành đẩy request PUT content về phía CloudServer.
 - Sau khi PUT thành công tại 1 replica, cập nhật trạng thái replica = updated.
 - Đầu ra: Thông báo tạo thành công hay không.. Hiển thị file ra giao diện.
 
@@ -80,7 +81,8 @@
   updated = False. Khi có request đến SCS, yêu cầu file này, request sẽ được chuyển
   hướng ưu tiên đến replica với trạng thái updated = True.
 - Định kỳ, sau một khoảng thời gian t, `daemon process` tiếp tục đẩy bản update trong
-  cache queue đến các replica còn lại. Cập nhật trạng thái sau khi đẩy xong, updated = True.
+  cache queue đến các replica còn lại (Cần có cơ chế tránh lưu các replica trong
+  cùng một CloudServer). Cập nhật trạng thái sau khi đẩy xong, updated = True.
   (Những thông tin về trạng thái sẽ được lưu dưới DB). Khi tất cả các replica có
   trạng thái updated = True, loại bỏ bản update khỏi cache queue.
 - Đầu ra: Thông báo update thành công hay không(ngay sau khi cập nhật replica đầu tiên)
