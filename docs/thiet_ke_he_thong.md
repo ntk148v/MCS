@@ -189,7 +189,7 @@ Giải pháp:
 
 Giải pháp:
 
-- Vấn đề Lookup ở đây có liên quan chặt chẽ tới cơ chế xử lý cập nhật Data Object **x**. Theo đó, khi người dùng thực hiện thao tác cập nhật Data Objec **x** chúng ta cần lưu lại **các replica nào trong số các replica của x đã được cập nhật**, đồng thời đánh dấu **x** chưa được đồng bộ hóa. Hai thông tin: **x.is_synchronized = False** và **is\_synchronized** - thuộc tính của một replica xác định replica đó đã được cập nhật hay chưa đã được cập nhật sẽ được lưu vào **Object Metadata** của x.
+- Vấn đề Lookup ở đây có liên quan chặt chẽ tới cơ chế xử lý cập nhật Data Object **x**. Theo đó, khi người dùng thực hiện thao tác cập nhật Data Object **x** chúng ta cần lưu lại **các replica nào trong số các replica của x đã được cập nhật**, đồng thời đánh dấu **x** chưa được đồng bộ hóa. Hai thông tin: **x.is_synchronized = False** và **is\_synchronized** - thuộc tính của một replica xác định replica đó đã được cập nhật hay chưa đã được cập nhật sẽ được lưu vào **Object Metadata** của x.
 - Khi một Client thực hiện Lookup **x**, chúng ta phải truy cập vào Object Metadata của **x** để kiểm tra xem **x** đã được đồng bộ hay chưa bằng cách kiểm tra tham số **x.is_synchronized**. Nếu **x** chưa được đồng bộ, thì theo cơ chế của Read After Write, SCS sẽ trả về cho Client một trong số replica đã được cập nhật - replica tương ứng với **updated\_replicaID**.
 
 Như vậy, trong quá trình giải quyết các vấn đề gặp phải trong hệ thống, **Object metadata** của **x** đã mở rộng ra và chứa các thông tin sau:
@@ -232,7 +232,7 @@ Như vậy, một trong các điểm quan trọng nhất để thực hiện qu�
 
 #### 3.5.4 Delete Data Object Process
 
-Cơ chế xóa một Data Object trên hệ thống: Đưa thông tin của Data Object bị xóa vào hàng chờ **Wait\_Delete\_Deplica\_List** chứa trong thông tin của User, sau đó thực thi các bước sau:
+Cơ chế xóa một Data Object trên hệ thống: Đưa thông tin của Data Object bị xóa vào hàng chờ **Wait\_Delete\_Object\_List** chứa trong thông tin của User, sau đó thực thi các bước sau:
 
 - Bước 1: Đánh dấu Data Object bị xóa bằng cách thiết lập **is_deleted = True** trong Object Metadata
 - Bước 2: Thiết lập một Deamon Process định kỳ thực hiện công việc sau:
@@ -270,58 +270,30 @@ Trong quá trình thực hiện di chuyển dữ liệu giữa Cloud Node sắp 
 
 ### 3.7 Manage and Process User Information in SCS System
 
+Sau khi thiết kế các cơ chế để quản lý đối tượng Data Object và Các Cloud Node, bây giờ chúng ta cần xây dựng các cơ chế quản lý những người sử dụng hệ thống - User.
 
-### 3.8 Handle Cloud Node Failure
+### 3.7.1 Create New User Process
 
-Trong trường hợp có một Cloud Node bị lỗi, các dữ liệu thuộc Cloud đó có thể bị mất ? Có cần lưu trữ 1 backup lưu trữ Cloud Node đó đang chứa các Data Object nào không ?
+Thao tác đầu tiên mà chúng ta cần xử lý là thao tác tạo một người dùng mới. Thông tin đầu vào cho quá trình tạo một người dùng mới là:
 
-### 3.9 Process Folder Object in SCS System
+- User Name \- Pasword hoặc thông tin định danh (GoogleAuth, FacebookAuth,...)
+- Init Cloud List
+- User Role (User hoặc Admin. Admin có quyền tạo User mới).
 
-User Data là Object chứa thông tin về một tài khoản trên hệ thống. Một tài khoản trên hệ thống sẽ cần phải có các thông tin sau:
+Các bước xử lý được tiến hành như sau:
 
-- User authentication data: Thông tin xác thực của Account ( account name, password, GoogleAuthenticationInformation, Facebook Authentication Infomation...)
-- CloudList: Dánh sách các Cloud Server mà account đó sở hữu. Thông tin về một cloud server bao gồm các thành phần sau:
-    - Cấu hình của cloud - **Cloud Config**:
-        - Cloud Type: Loại cloud (AWS S3, Swift, Google Cloud, Ceph,...)
-        - Cloud Authentication: Thông tin định danh, xác thực cũng như địa chỉ truy cập của cloud:
-            - Cloud IP Address
-            - Cloud Account Name
-            - Cloud Account Password
-            - Additional Information (Switf Container name, S3 Folder, ...)
-
-Những thuộc tính trên là đủ để chúng ta lưu trữu thông tin xác thực của tài khoản, và thông tin về các Cloud Storage Server mà tài khoản đó sở hữu. Nhiệm vụ tiếp theo của chúng ta, đó
-Trong quá trình thiết kế hệ thống cũng như thiết kế các thành phần trong hệ thống, các đối tượng mà chúng ta xây dựng sẽ liên tục được thay đổi và cập nhật cho đến khi mọi vấn đề trong hệ thống được giải quyết xong.
+- Kiểm tra thông tin xác thực của tài khoản User
+- Tạo Cloud Ring cho User
+- Tạo ra các dữ liệu quản lý tài khoản mà chúng ta đã tạo ra ở phần trên:
+    - Data\_Object\_Connection\_Information\_List: Danh sách thông tin về các Data Object được truy cập trong thời gian gần đây.
+    - Is\_Updating\_Data\_Object\_List: Danh sách các Data Object đang được cập nhật.
+    - Wait\_Delete\_Object\_List: Danh sách các Data Object đang được thực thi quá trình xóa.
+- Cuối cùng, chúng ta lưu các thông tin trên vào cơ sở dữ liệu
 
 #### _Algorithm 1: Create Account_
 
-    1. Thông tin của Cloud trên Cloud Ring - **Cloud Node Information**:
-        - Cloud ID: ID trên Ring của cloud.
-        - Successor Node, Previous Node.
-        - Finger Table
-        - Additional Informations....
-
 ```python
-class UserData:
-    attr UserAuthenticationData
-    attr List<CloudObject>
 
-
-class CloudObject:
-
-    attr CloudConfig:
-        attr CloudType
-        attr CloudAuthentication:
-            attr IPAddress
-            attr CloudAccountName
-            attr CloudAccountPassword
-            ...
-
-    attr CloudNodeInformation:
-        attr CloudID
-        attr SuccessorNode
-        attr PreviousNode
-        attr FingerTable
-        ...
 ```
 
 Ở đây ta thấy có sự xuất hiện của các khái niệm **Cloud Ring** và **Cloud Node**. Ý nghĩa của chúng là gì? Phần tiếp theo sẽ giải đáp ý nghĩa của các khái niệm này.
@@ -340,5 +312,18 @@ def CreateAccount(User_Authentication, Cloud_Information_List):
     # Create Cloud Object for each Cloud in User's Cloud List
     for Cloud_Information in Cloud_Information_List:
 
-
 ```
+
+### 3.8 Handle Cloud Node Failure
+
+Trong trường hợp có một Cloud Node bị lỗi, các dữ liệu thuộc Cloud đó có thể bị mất ? Có cần lưu trữ 1 backup lưu trữ Cloud Node đó đang chứa các Data Object nào không ?
+
+### 3.9 Process Folder Object in SCS System
+
+Kiểu lưu trữ được sử dụng trong hệ thống SCS là Object Storage. Tuy nhiên, do thói quen của người sử dụng, chúng ta cần cung cấp cho người dùng các Folder, để cho phép người dùng dễ dàng quản lý dữ liệu của họ theo cấu trúc cây thư mục quen thuộc.
+
+Để tạo ra các Folder, chúng ta sẽ lưu các Folder có trong kho lưu trữ của người dùng dưới dạng một Data Object. Data Object này sẽ có nội dung là các thông tin về các File, Folder con mà Folder này chứa - File/Sub Folder Name và đường dẫn tới Object Metadata của các File/ Sub Folder đó.
+
+Chúng ta sẽ định nghĩa các cơ chế xử lý các thao tác trên đối tượng Folder ở phần dưới đây.
+
+## 4. Thiết kế Biểu đồ lớp - Class Diagram của hệ thống
