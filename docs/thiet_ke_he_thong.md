@@ -228,10 +228,49 @@ Như vậy, một trong các điểm quan trọng nhất để thực hiện qu�
 
 #### 3.5.4 Delete Data Object Process
 
+Cơ chế xóa một Data Object trên hệ thống: Đưa thông tin của Data Object bị xóa vào hàng chờ **Wait\_Delete\_Deplica\_List** chứa trong thông tin của User, sau đó thực thi các bước sau:
 
+- Bước 1: Đánh dấu Data Object bị xóa bằng cách thiết lập **is_deleted = True** trong Object Metadata
+- Bước 2: Thiết lập một Deamon Process định kỳ thực hiện công việc sau:
+    - Lấy ra một Data Object từ **Wait\_Delete\_Deplica\_List**.
+    - Xóa các bản sao của Data Object đó.
+    - Xóa Object Metadta của Data Object đó.
 
+Trong qúa trình lookup, SCS cần kiểm tra xem Data Object đã bị xóa hay chưa bằng cách đọc giá trị của thuộc tinhsg **is\_deleted**. Nếu Data Object đã bị xóa, hệ thống thông báo lại cho người dùng.
 
-### User Data Object
+### 3.6 Process Cloud Node Join and Leave Events in SCS System
+
+SCS dựa vào cơ chế Node Join and Leave của Chord Protocol để tạo ra cơ chế xử lý các sự kiện người dùng thêm một Cloud mới vào hệ thống và sự kiện Người dùng loại một Cloud khỏi hệ thống.
+
+#### 3.6.1 Process Cloud Node Join Event
+
+Quá trình xử lý sự kiện thêm một Cloud Node vào hệ thống được SCS thực hiện khi hệ thống nhận được yêu cầu của người dùng, với tham số đầu vào là thông tin định danh của Cloud Node. Các bước xử lý được thực hiện như sau:
+
+- Kiểm tra thông tin định danh của Cloud Node
+- Thêm Cloud Node vào Cloud Ring của User theo các nguyên tắc của Chrord: Cập nhật Succesor Node, Predecessor Node, Ring Table cho các Node
+- Khởi chạy một Deamon Process thực hiện công việc di chuyển các Data Object nằm sai vị trí trong Cloud Ring mới.
+
+**thảo luận**
+Trong khoảng thời gian di chuyển các Data Object, có cần ngừng lại mọi truy cập từ người dùng tới Cloud Node mới cũng như Sucessor Node của Cloud Node mới hay không ? Ví dụ như chuyển hướng Replica,...bằng cách đánh Dấu Cloud Node mới và Successor của Cloud Node mới đang ở trong trạng thái đang Synchronize.
+
+#### 3.6.2 Process Cloud Node Leave Event
+
+Quá trình xử lý sự kiện loại bỏ một Cloud Node vào hệ thống được SCS thực hiện khi hệ thống nhận được yêu cầu của người dùng, với tham số đầu vào là thông tin định danh của Cloud Node. Các bước xử lý được thực hiện như sau:
+
+- Đánh dấu trạng thái của Cloud Node sắp bị loại bỏ là **Waiting_Leave Node**
+- Khởi chạy một Deamon Process thực hiện công việc di chuyển các Data Object nằm sai vị trí trong Cloud Ring mới từ Cloud Node bị loại bỏ sang Successor Node của nó.
+
+- Sau khi quá trình di chuyển dữ liệu hoàn tất, loại bỏ Cloud Node vào Cloud Ring của User theo các nguyên tắc của Chrord: Cập nhật Succesor Node, Predecessor Node, Ring Table cho các Node.
+
+Trong quá trình thực hiện di chuyển dữ liệu giữa Cloud Node sắp bị loại bỏ sang Successor Node, mọi truy cập tới Cloud Node bị loại bỏ bị ngừng lại, thực hiện chuyển hướng sang các replica nằm ở các Cloud Node khác.
+
+### 3.7 Manage and Process User Information in SCS System
+
+### 3.8 Handle Cloud Node Failure
+
+Trong trường hợp có một Cloud Node bị lỗi, các dữ liệu thuộc Cloud đó có thể bị mất ? Có cần lưu trữ 1 backup lưu trữ Cloud Node đó đang chứa các Data Object nào không ?
+
+### 3.9 Process Folder Object in SCS System
 
 User Data là Object chứa thông tin về một tài khoản trên hệ thống. Một tài khoản trên hệ thống sẽ cần phải có các thông tin sau:
 
