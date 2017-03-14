@@ -1,4 +1,4 @@
-#Những vấn đề còn gặp phải.
+# Những vấn đề còn gặp phải.
 
 1. Làm sao định kỳ thực hiện health check các CloudServer trong CloudRing.
    Giải pháp khả thi:
@@ -39,3 +39,13 @@
    User thay đổi, nhưng chỉ được thay đổi trong khoảng cho trước).
 7. Xử lý khi có một CloudServer gặp lỗi (quay lại bài toán health check phía
    trên).
+
+8. Vấn đề xảy ra khi User add thêm một Cloud Node vào hệ thống. Nếu như trong Cloud Node mới đã có sẵn các Data Object ==> Có thêm luôn các Data Object đó vào hệ thống hay không ?
+
+9. Vấn đề về User Account:
+
+Đề xuất: Sử dụng mô hình của OpenStack:
+
+Hệ thống sẽ có một Admin, Admin có quyền tạo ra Project và User, đồng thời có quyền thiết lập một User được dùng Project nào trong hệ thống.
+
+Admin có quyền thiết lập User có quyền Admin đối với một Project trong hệ thống. Admin của một Project có quyền thêm / xóa các Cloud Node của Project đó

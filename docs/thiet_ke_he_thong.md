@@ -157,7 +157,11 @@ Sau phần giải quyết vấn đề lưu trữ một Data Object mới lên h�
 
 Thông tin về các Replica của **x** cũng chính là các thông tin liên quan tới **x**, chúng được gọi là **Object metadata** của **x**. Vì vậy, giải pháp được sử dụng trong hệ thống SCS để thực hiện tác vụ Lookup và Get Data Object **x**, đó là tạo ra và lưu trữ đối tượng **Object metadata** của x. **Object metadata** của x sẽ lưu trữ các thông tin liên quan tới **x**, với vấn đề Lookup Data Object của chúng ta, thông tin về các bản sao của **x** và **x.Object\_Name** sẽ được lưu vào Object metadata.
 
-Quá trình lookup **cơ bản** sẽ diễn ra như sau: Khi nhận được lookup request, SCS sẽ lấy ra thông tin **Object\_Name** từ request, và tìm trong cơ sở dữ liệu **Object Metadata** nào tương ứng với **Object\_Name** này. Sau đó SCS sẽ lấy ra một **replicaID** trong số các **replicaID** của Object đó, và dựa vào thuật toán Lookup của Chord Protocol để tìm xem Cloud Node nào đang chứa replica tương ứng với replicaID này (replicaID's successor Node). Bước cuối cùng, SCS Server trả về cho User các thông tin cần thiết như: replicaID và thông tin định danh của Cloud  để User có thể kết nối trực tiếp tới Cloud Server để lấy nội dung của Data Object **x** về. Cơ chế tương tác trực tiếp giữa User và Cloud Server cho phép dữ liệu không cần phải đi qua hệ thống trung gian là SCS, qua đó giảm tải cho hệ thống SCS cũng như tăng hiệu năng truy cập, vì cách User truy cập trực tiếp tới Cloud Server sẽ nhanh hơn việc chúng ta phải lấy nội dung Object từ Cloud Server về SCS, sau đó lại từ SCS trả nội dung Object về User.
+Quá trình lookup **cơ bản** sẽ diễn ra như sau:
+
+Khi nhận được lookup request, SCS sẽ lấy ra thông tin **Object\_Name** từ request, và tìm trong cơ sở dữ liệu **Object Metadata** nào tương ứng với **Object\_Name** này. Sau đó SCS sẽ lấy ra một **replicaID** trong số các **replicaID** của Object đó, và dựa vào thuật toán Lookup của Chord Protocol để tìm xem Cloud Node nào đang chứa replica tương ứng với replicaID này (replicaID's successor Node). Bước cuối cùng, SCS Server trả về cho User các thông tin cần thiết như: replicaID và thông tin định danh của Cloud  để User có thể kết nối trực tiếp tới Cloud Server để lấy nội dung của Data Object **x** về. Cơ chế tương tác trực tiếp giữa User và Cloud Server cho phép dữ liệu không cần phải đi qua hệ thống trung gian là SCS, qua đó giảm tải cho hệ thống SCS cũng như tăng hiệu năng truy cập, vì cách User truy cập trực tiếp tới Cloud Server sẽ nhanh hơn việc chúng ta phải lấy nội dung Object từ Cloud Server về SCS, sau đó lại từ SCS trả nội dung Object về User.
+
+**(Vấn đề- Hybrid Cloud ? - Cloud có thêm thuộc tính là private hay public, nếu public thì cho phép người dùng connect trực tiếp, còn nếu private thì cho đi qua SCS rồi SCS trả về ?)**
 
 Như vậy, chúng ta đã xây dựng quy trình xử lý cơ bản cho thao tác Lookup Data Object. Tuy nhiên, như chúng ta đã nói ở phần đầu, các thao tác trên Data Object phải đảm bảo về các tính chất của hệ thống phân tán như tính High-available, cân bằng tải và tính nhất quán của dữ liệu - data consistency. Trong thao tác Lookup Data Object, các tính chất trên biểu hiện cụ thể thông qua các kịch bản sau:
 
@@ -185,8 +189,8 @@ Giải pháp:
 
 Giải pháp:
 
-- Vấn đề Lookup ở đây có liên quan chặt chẽ tới cơ chế xử lý cập nhật Data Object **x**. Theo đó, khi người dùng thực hiện thao tác cập nhật Data Objec **x** chúng ta cần lưu lại **replica nào trong số các replica của x đã được cập nhật**, đồng thời đánh dấu **x** chưa được đồng bộ hóa. Hai thông tin: **x.is_synchronized = False** và **updated\_replicaID** - replicaID của replica đã được cập nhật sẽ được lưu vào **Object Metadata** của x.
-- Khi một Client thực hiện Lookup **x**, chúng ta phải truy cập vào Object Metadata của **x** để kiểm tra xem **x** đã được đồng bộ hay chưa bằng cách kiểm tra tham số **x.is_synchronized**. Nếu **x** chưa được đồng bộ, thì theo cơ chế của Read After Write, SCS sẽ trả về cho Client replica đã được cập nhật - replica tương ứng với **updated\_replicaID**.
+- Vấn đề Lookup ở đây có liên quan chặt chẽ tới cơ chế xử lý cập nhật Data Object **x**. Theo đó, khi người dùng thực hiện thao tác cập nhật Data Objec **x** chúng ta cần lưu lại **các replica nào trong số các replica của x đã được cập nhật**, đồng thời đánh dấu **x** chưa được đồng bộ hóa. Hai thông tin: **x.is_synchronized = False** và **is\_synchronized** - thuộc tính của một replica xác định replica đó đã được cập nhật hay chưa đã được cập nhật sẽ được lưu vào **Object Metadata** của x.
+- Khi một Client thực hiện Lookup **x**, chúng ta phải truy cập vào Object Metadata của **x** để kiểm tra xem **x** đã được đồng bộ hay chưa bằng cách kiểm tra tham số **x.is_synchronized**. Nếu **x** chưa được đồng bộ, thì theo cơ chế của Read After Write, SCS sẽ trả về cho Client một trong số replica đã được cập nhật - replica tương ứng với **updated\_replicaID**.
 
 Như vậy, trong quá trình giải quyết các vấn đề gặp phải trong hệ thống, **Object metadata** của **x** đã mở rộng ra và chứa các thông tin sau:
 
@@ -194,7 +198,7 @@ Như vậy, trong quá trình giải quyết các vấn đề gặp phải trong
 - Tên của Data Object **x**
 - Số lượng các bản sao của x và thông tin về các bản sao của **x**
 - Trạng thái đồng bộ: Được đồng bộ hay chưa được đồng bộ.
-- ReplicaID của replica đã được cập nhật phiên bản mới nhất
+- Trong danh sách các replica của Object: Thông tin về một replica không chỉ có **replicaID**, mà còn là trạng thái đồng bộ **replica.is\_synchronized** của replica đó nữa.
 - ...
 
 Trong các phần tiếp theo, những đối tượng dữ liệu và các phương thức xử lý mà chúng ta đã trình bày có thể tiếp tục được mở rộng hoặc điều chỉnh để đáp ứng cho việc giải quyết các vấn đề xảy ra khi thiết kế hệ thống. Phần tiếp theo, chúng ta sẽ xây dựng cơ chế để thực hiện việc cập nhật một Data Object.
@@ -203,7 +207,7 @@ Trong các phần tiếp theo, những đối tượng dữ liệu và các phư
 
 Như đã trình bày ở phần Lookup, quá trình Update Data Object của một User tuân theo nguyên tắc Read and Write: Cơ chế cơ bản của việc cập nhật nội dung cho Data Object **x** diễn ra như theo quy tắc Read After Write như sau:
 
-Tham số đầu vào của quá trình cập nhật Data Object **x** là tên của **x** - x.Object\_Name và nội dung mới mà **x** sẽ lưu trữ - x.New\_Content. Khi SCS nhận được yêu cầu cập nhật từ người dùng, Hệ thống sẽ sử dụng **x.Object_Name** để lấy ra Object Metadata của **x**, sau đó cập nhật **x.New\_Content** vào một trong các replica của **x**. Sau khi cập nhật xong nội dung cho replica được chọn, chúng ta thay đổi trạng thái của x sang thành chưa được đồng bộ - **x.is\_synchronized = False** và lưu lại ReplicaID của replica mà chúng ta đã cập nhật lên phiên bản mới nhất vào **updated\_ReplicaID**.
+Tham số đầu vào của quá trình cập nhật Data Object **x** là tên của **x** - x.Object\_Name và nội dung mới mà **x** sẽ lưu trữ - x.New\_Content. Khi SCS nhận được yêu cầu cập nhật từ người dùng, Hệ thống sẽ sử dụng **x.Object_Name** để lấy ra Object Metadata của **x**, sau đó cập nhật **x.New\_Content** vào một trong các replica của **x**. Sau khi cập nhật xong nội dung cho replica được chọn, chúng ta thay đổi trạng thái của x sang thành chưa được đồng bộ - **x.is\_synchronized = False** và lưu lại ReplicaID của replica mà chúng ta đã cập nhật lên phiên bản mới nhất vào **updated\_ReplicaID**. Đồng thời chúng ta cập nhật trạng thái cho các replica, replica đã được cập nhật sẽ được thiết lập **replica.is\_synchronized = True**, các replica chưa được đồng bộ còn lại được thiết lập **replica.is\_synchronized = False** .
 
 Các vấn đề cần giải quyết trong quá trình cập nhật Data Object x là:
 
@@ -214,7 +218,7 @@ Các vấn đề cần giải quyết trong quá trình cập nhật Data Object
 **Thứ hai**: Chúng ta cần xác định cơ chế đồng bộ hóa. Cứ sau mỗi **k** phút, Deamon Process thực hiện nhiệm vụ đồng bộ dữ liệu hoạt động. Qúa trình đồng bộ sẽ diễn ra như sau:
 
 - **Deamon Process** sẽ lần lượt lấy ra từ danh sách chờ đồng bộ hóa thông tin về Data Object **x** chưa được đồng bộ. Thông tin về một Data Object chưa được đồng bộ bao gồm tên của Data Object, replicaID của Replica đã được đồng bộ.
-- **Deamon Process** sử dụng tên của Data Object lấy ra Object Meatadata tương ứng với Data Object cần đồng bộ, từ đó lấy ra danh sách các replica chưa được đồng bộ của Data Object đó, sau đó **Deamon Proccess** thực hiện việc lấy nội dung mới nhất của Data Object từ replica đã được đồng bộ lên SCS Server, sau đó nội dung lấy về SCS được thực hiẹn để đồng bộ cho các replica chưa được cập nhật nội dung mới nhất.
+- **Deamon Process** sử dụng tên của Data Object lấy ra Object Meatadata tương ứng với Data Object cần đồng bộ, từ đó lấy ra danh sách các replica chưa được đồng bộ của Data Object đó, sau đó **Deamon Proccess** thực hiện việc lấy nội dung mới nhất của Data Object từ replica đã được đồng bộ lên SCS Server, sau đó nội dung lấy về SCS được thực hiện để đồng bộ cho các replica chưa được cập nhật nội dung mới nhất, các replica đã được cập nhật xong được đặt lại thuộc tính **repica.is\_synchronized = True**.
 - Sau khi các replica còn lại đã được cập nhật nội dung mới nhất, **Deamon Process** thay đổi trạng thái của Data Object thành đã được đồng bộ: **x.is\_synchronized = True**
 - Sau khi đồng bộ xong cho một Data Object có trong danh sách chờ đồng bộ hóa, **Deamon Process** loại bỏ Data Object này khỏi danh sách chờ, và lấy ra Data Object tiếp theo để thực hiện việc đồng bộ.
 
@@ -234,9 +238,9 @@ Cơ chế xóa một Data Object trên hệ thống: Đưa thông tin của Data
 - Bước 2: Thiết lập một Deamon Process định kỳ thực hiện công việc sau:
     - Lấy ra một Data Object từ **Wait\_Delete\_Deplica\_List**.
     - Xóa các bản sao của Data Object đó.
-    - Xóa Object Metadta của Data Object đó.
+    - Xóa Object Metadata của Data Object đó.
 
-Trong qúa trình lookup, SCS cần kiểm tra xem Data Object đã bị xóa hay chưa bằng cách đọc giá trị của thuộc tinhsg **is\_deleted**. Nếu Data Object đã bị xóa, hệ thống thông báo lại cho người dùng.
+**Note**: Trong qúa trình lookup, SCS cần kiểm tra xem Data Object đã bị xóa hay chưa bằng cách đọc giá trị của thuộc tinhsg **is\_deleted**. Nếu Data Object đã bị xóa, hệ thống thông báo lại cho người dùng.
 
 ### 3.6 Process Cloud Node Join and Leave Events in SCS System
 
@@ -251,7 +255,7 @@ Quá trình xử lý sự kiện thêm một Cloud Node vào hệ thống đư�
 - Khởi chạy một Deamon Process thực hiện công việc di chuyển các Data Object nằm sai vị trí trong Cloud Ring mới.
 
 **thảo luận**
-Trong khoảng thời gian di chuyển các Data Object, có cần ngừng lại mọi truy cập từ người dùng tới Cloud Node mới cũng như Sucessor Node của Cloud Node mới hay không ? Ví dụ như chuyển hướng Replica,...bằng cách đánh Dấu Cloud Node mới và Successor của Cloud Node mới đang ở trong trạng thái đang Synchronize.
+Trong khoảng thời gian di chuyển các Data Object, cần ngừng lại mọi truy cập từ người dùng tới Cloud Node mới cũng như Sucessor Node của Cloud Node mới. Ví dụ như chuyển hướng Replica,...bằng cách đánh Dấu Cloud Node mới và Successor của Cloud Node mới đang ở trong trạng thái đang Synchronize.
 
 #### 3.6.2 Process Cloud Node Leave Event
 
@@ -265,6 +269,7 @@ Quá trình xử lý sự kiện loại bỏ một Cloud Node vào hệ thống 
 Trong quá trình thực hiện di chuyển dữ liệu giữa Cloud Node sắp bị loại bỏ sang Successor Node, mọi truy cập tới Cloud Node bị loại bỏ bị ngừng lại, thực hiện chuyển hướng sang các replica nằm ở các Cloud Node khác.
 
 ### 3.7 Manage and Process User Information in SCS System
+
 
 ### 3.8 Handle Cloud Node Failure
 
@@ -298,7 +303,7 @@ Trong quá trình thiết kế hệ thống cũng như thiết kế các thành 
 ```python
 class UserData:
     attr UserAuthenticationData
-    attr List<CloudObjet>
+    attr List<CloudObject>
 
 
 class CloudObject:
