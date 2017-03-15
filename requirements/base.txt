@@ -5,3 +5,9 @@
 Django
 
 django-model-utils
+
+mysql-python
+
+django-allauth
+
+calplus

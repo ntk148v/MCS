@@ -29,7 +29,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles'
 ]
 
-PROJECT_APPS = []
+PROJECT_APPS = [
+    'authentication',
+    'dashboard'
+]
 
 INSTALLED_APPS += PROJECT_APPS
 
