@@ -138,15 +138,21 @@ Vấn đề đầu tiên chúng ta giải quyết, đó là lưu trữ một Dat
 
 Chúng ta sẽ đáp ứng yêu cầu (\*) bằng cách tạo ra **k** bản sao, mỗi bản sao sẽ có một tên và ID riêng biết. Chúng ta sẽ đặt tên cho các replica của **x** bằng cách gán thêm các hậu tố **\_replica(i)** vào tên của x. Ví dụ với Data Object có tên là **data.png** thì các bản sao có thể có tên là **data.png\_replica1**, **data.png\_replica2**, **data.png\_replica3**,... (với k =3)
 
+**Note**: Hiện tại trong các ví dụ, để đơn giản chúng ta sử dụng tên tương đối của Object. Trong phần xử lý Folder, chúng ta sẽ biết rằng tên thực sự của Object được sử dụng trong hệ thống là tên tuyệt đối theo đường dẫn từ Root Folder, chứ không phải là tên tương đối.
+
 Lúc này, các replica của **x** sẽ có vai trò như các giá trị **Value** trong hệ thống sử dụng Chord Protocol. Để lưu trữ các replica của **x**, hệ thống sẽ hash tên của các replica (vừa được tạo ra ở bước trước) để tạo thành **replicaID** cho các replica này. Saud đó, cặp \<**replicaID**,**x.Data**\> sẽ tạo thành các **Key-Value** trong hệ thống Chord Protocol. Sau đó, hệ thống SCS sẽ sử dụng Chord Protocol để tìm ra Successor Node tương ứng với **replicaID** của từng cặp \<**replicaID**,**x.Data**\>. Cloud tương ứng với Sucessor Nodeđó sẽ được chọn để lưu trữ cặp \<**replicaID**,**x.Data**\> này.
 
 Một vấn đề xảy ra ở đây, đó là có thể xảy ra trường hợp Cloud Node của một replicaID nào đó đã bị đầy - không thể chứa thêm Object nữa, hoặc không đủ khả năng để chứa Object này. Giải pháp của chúng ta trong trường hợp này, đó là trước khi lưu một replica của x vào một Cloud Node là Successor Node của replicaID, chúng ta cần kiểm tra xem Cloud Node đó có đủ khả năng lưu trữ replica đó không. Nếu trong trường hợp Cloud Node không có đủ khả năng lưu trữ replica của x, chúng ta sẽ sinh ra một tên khác cho replica này và tạo ra một ReplicaID mới, sao cho replica này sẽ được lưu vào một Cloud Node khác có đủ khả năng chứa nó. Trong một số trường hợp khi hệ thống quá tải (Ví dụ khi có quá nhiều Cloud Node trong hệ thống không còn đủ khả năng lưu trữ Data Object mới), chúng ta có thể cảnh báo User về tình trạng hệ thống.
 
+Từ vấn đề ở trên, chúng ta sẽ đề xuất 1 cơ chế kiểm tra trong quá trình lưu trữ **x**: Trước khi lưu trữ một replica lên một CloudNode, chúng ta cần kiểm tra tình trạng của Cloud Node. Nếu Cloud Node đã
+
 **Cần thảo luận thêm với thầy**
+
 Tuy nhiên, có một vấn đề phát sinh ở đây, đó là chúng ta không hoàn toàn đảm bảo rằng, **k** key được sinh ra sẽ luôn luôn nằm trên **k** Cloud khác nhau, do chúng ta không thể nào điều khiển được replicaID nhận được sau khi hashing replica_name sẽ rơi vào node nào trên ring ?
 Đặt ID cho Node/Replica, sau đó lưu lại lastID used trong Node ?
 
 Thứ hai, là có luôn cần đảm bảo **k** bản sao phải nằm trên **k** node khác nhau (một cách tuyệt đối ?) Nếu không cần thì ta tiếp tục sử dụng cách cũ.
+
 **Cần thảo luận thêm với thầy**
 
 #### 3.5.2 Lookup Data Object Process
@@ -242,13 +248,13 @@ Cơ chế xóa một Data Object trên hệ thống: Đưa thông tin của Data
 
 **Note**: Trong qúa trình lookup, SCS cần kiểm tra xem Data Object đã bị xóa hay chưa bằng cách đọc giá trị của thuộc tính **is\_deleted**. Nếu Data Object đã bị xóa, hệ thống thông báo lại cho người dùng.
 
-
-
 #### 3.5.5 Update Data Object Name Process
 
 Một thao tác nữa mà chúng ta cần phải xử lý, đó là đổi tên của Data Object **x**. Thao tác này xảy ra khi người dùng muốn đổi tên Data Object **x** từ **name\_1** sang **name\_2**.
 
 Để xử lý thao tác này, chúng ta cập nhật trong Object Metadata tên của Data Object **x** sang tên mới, đồng thời tạo lại Object Metadata ID theo tên mới của **x**.
+
+Trong thời gian cập nhật Object Metadata, cần chuyển trạng thái của **x** sang **Updating\_Metadata**
 
 Một vấn đề đặt ra ở đây, đó là khi chúng ta thay tên của **x** như vậy, liệu chúng ta có phải đặt lại **replicaID** cho các replica của **x** hay không ? Vì nếu như sau này người dùng lại tên của **x** là **name\_1** cho một Data Object mới, thì sẽ xảy ra khả năng 2 Data Object có một replicaID trùng nhau, trong trường hợp chúng ta dùng tên cơ sở là tên của Data Object + hậu tố để hash tạo ra replicaID ?
 
@@ -301,7 +307,7 @@ Các bước xử lý được tiến hành như sau:
 - Tạo Cloud Ring cho User
 - Tạo ra các dữ liệu quản lý tài khoản mà chúng ta đã tạo ra ở phần trên:
     - Data\_Object\_Connection\_Information\_List: Danh sách thông tin về các Data Object được truy cập trong thời gian gần đây.
-    - Is\_Updating\_Data\_Object\_List: Danh sách các Data Object đang được cập nhật.
+    - Is\_Synchronizing\_Data\_Object\_List: Danh sách các Data Object đang được cập nhật.
     - Wait\_Delete\_Object\_List: Danh sách các Data Object đang được thực thi quá trình xóa.
 - Cuối cùng, chúng ta lưu các thông tin trên vào cơ sở dữ liệu
 
@@ -363,7 +369,6 @@ Nội dung của một **Folder Object** sẽ được thiết kế bao gồm:
 
 - Danh sách thông tin về các Folder / Object là con của Folder Object đó
 
-
 #### 3.9.2 Update Folder Object Name
 
 Tiếp theo, chúng ta cần xây dựng cơ chế để cập nhật tên một Folder
@@ -377,3 +382,25 @@ Ví dụ, khi ta đổi tên Folder ```Images``` thành ```Photos```, tất cả
 Quá trình xử lý xóa một Folder được thực hiện bằng cách xóa tất cả mọi Data Object nằm trong Folder và các Folder con của Folder đó.
 
 ## 4. Thiết kế Biểu đồ lớp - Class Diagram của hệ thống
+
+Dựa trên những thiết kế mà chúng ta đã tạo ra để xây dựng các cơ chế xử lý cho hệ thống SCS, chúng ta sẽ tiến hành thiết kế các đối tượng trong hệ thống.
+
+![class_diagram](./images/class_diagram.png)
+
+Vấn đề: Các list:
+
+- Data\_Object\_Connection\_Information\_List: Danh sách thông tin về các Data Object được truy cập trong thời gian gần đây.
+- Is\_Synchronizing\_Data\_Object\_List: Danh sách các Data Object đang được cập nhật.
+- Wait\_Delete\_Object\_List: Danh sách các Data Object đang được thực thi quá trình xóa.
+
+ trong đối tượng User là các tài nguyên chia sẻ chung giữa các SCS System (Trong kịch bản sử dụng multi SCS System)
+
+ Chúng ta có phải xử lý trường hợp nhiều Daemon process cùng truy cập và xử lý chung một Tài nguyên chia sẻ chung kia không (Lok, sharemaphore,...)
+
+ Các list trên đóng vai trò như các Queue trong RabbitMQ.
+
+- Ý tưởng về Sử dụng RabbitMQ song song với việc duy trì các list trên trong DataBase ?
+
+Vấn đề: Dung lượng lưu trữ trên các Cloud Node:
+
+Chúng ta có phải dự trù dung lượng dư thừa trên các Node hay không? trong trường hợp Successsor của một
