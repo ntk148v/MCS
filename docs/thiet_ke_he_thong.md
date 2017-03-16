@@ -181,6 +181,20 @@ Giải pháp:
 
 - Khi lấy ra thông tin một replica của **x** để trả về cho người dùng, chúng ta sẽ truy cập vào thông tin của User để lấy ra tình trạng hiện tại của các Cloud nó. Nếu Cloud Node chứa replica đó đang có trình trạng xấu (bị hỏng/ ngắt kết nối,...), SCS cần trả về một Replica khác của **x** nằm ở Cloud Node có tình trạng tốt.
 
+**Note**: Giải pháp xử lý trường hợp Cloud bị hỏng /ngắt kết nối
+
+Kịch bản: Khi daemon process thực hiện việc quét các Cloud Node trong hệ thống và phát hiện ra 1 Cloud Node z nào đó bị hỏng.
+
+Giải pháp 1:
+
+- Daemon process thực hiện việc đánh dấu trong Database Cloud NOde z bị hỏng => **z.status = CORRUPTED**
+- Daemon process truy cập vào DB, lấy mọi replica có trong Cloud Node đó và thực hiện việc truy cập vào Object chứa Node đó và tạo 1 replica khác thay thế replica nằm trên Cloud bị hỏng ==> không khả thi. Vì nếu như vậy chúng ta phải lưu thêm 1 thông tin khác vào ReplicaInformation, đó là chúng ta phải chỉ ra replica đó là replica của Data Object nào ==> phải lưu thêm Object_ID để trỏ ngược về Object Metadata ==> việc cập nhật (cập nhật nội dung Data Object và cập nhật tên của Data Object) tăng thêm sự phức tạp.
+
+Giải pháp 2:
+
+- Daemon process chỉ thực hiện việc đánh dấu trong Database Cloud Node z bị hỏng ==> **z.status = CORRUPTED**.
+- Khi người dùng truy cập vào Data Object, hệ thống sẽ thực hiện đồng thời việc kiểm tra xem Data Object có replica nào bị hỏng không ? Nếu có replica nào đó của Data Object bị hỏng, hệ thống sẽ đánh dấu replica nào đang bị hỏng vào Object metadata, sau đó thêm Data Object có replica bị hỏng vào hàng chờ **is\_recovering\_failed_replica\_objects** nằm trên thông tin của User. Một daemon process khác sẽ thực hiện nhiệm vụ lên lấy các object trên hàng chờ kai và thay thế replica bị hỏng bằng một replica khác.
+
 **Thứ hai**: Chúng ta xử lý ra sao khi có quá nhiều truy cập vào một Data Object trong một khoảng thời gian ngắn ? (cân bằng tải giữa các replica)?
 
 Giải pháp:
@@ -238,11 +252,11 @@ Như vậy, một trong các điểm quan trọng nhất để thực hiện qu�
 
 #### 3.5.4 Delete Data Object Process
 
-Cơ chế xóa một Data Object trên hệ thống: Đưa thông tin của Data Object bị xóa vào hàng chờ **Wait\_Delete\_Object\_List** chứa trong thông tin của User, sau đó thực thi các bước sau:
+Cơ chế xóa một Data Object trên hệ thống: Đưa thông tin của Data Object bị xóa vào hàng chờ **Is_Deleting\_Object\_List** chứa trong thông tin của User, sau đó thực thi các bước sau:
 
 - Bước 1: Đánh dấu Data Object bị xóa bằng cách thiết lập **is_deleted = True** trong Object Metadata
 - Bước 2: Thiết lập một Deamon Process định kỳ thực hiện công việc sau:
-    - Lấy ra một Data Object từ **Wait\_Delete\_Replica\_List**.
+    - Lấy ra một Data Object từ **Is_Deleting\_Replica\_List**.
     - Xóa các bản sao của Data Object đó.
     - Xóa Object Metadata của Data Object đó sau khi đã xóa mọi Object Metadata.
 
@@ -254,7 +268,7 @@ Một thao tác nữa mà chúng ta cần phải xử lý, đó là đổi tên 
 
 Để xử lý thao tác này, chúng ta cập nhật trong Object Metadata tên của Data Object **x** sang tên mới, đồng thời tạo lại Object Metadata ID theo tên mới của **x**.
 
-Trong thời gian cập nhật Object Metadata, cần chuyển trạng thái của **x** sang **Updating\_Metadata**
+Trong thời gian cập nhật Object Metadata, cần chuyển trạng thái của **x** sang **Is\_Updating\_Metadata**
 
 Một vấn đề đặt ra ở đây, đó là khi chúng ta thay tên của **x** như vậy, liệu chúng ta có phải đặt lại **replicaID** cho các replica của **x** hay không ? Vì nếu như sau này người dùng lại tên của **x** là **name\_1** cho một Data Object mới, thì sẽ xảy ra khả năng 2 Data Object có một replicaID trùng nhau, trong trường hợp chúng ta dùng tên cơ sở là tên của Data Object + hậu tố để hash tạo ra replicaID ?
 
@@ -282,7 +296,7 @@ Trong khoảng thời gian di chuyển các Data Object, cần ngừng lại m�
 
 Quá trình xử lý sự kiện loại bỏ một Cloud Node vào hệ thống được SCS thực hiện khi hệ thống nhận được yêu cầu của người dùng, với tham số đầu vào là thông tin định danh của Cloud Node. Các bước xử lý được thực hiện như sau:
 
-- Đánh dấu trạng thái của Cloud Node sắp bị loại bỏ là **Waiting_Leave Node**
+- Đánh dấu trạng thái của Cloud Node sắp bị loại bỏ là **IS\_PREPARING\_TO\_LEAVE**
 - Khởi chạy một Deamon Process thực hiện công việc di chuyển các Data Object nằm sai vị trí trong Cloud Ring mới từ Cloud Node bị loại bỏ sang Successor Node của nó.
 
 - Sau khi quá trình di chuyển dữ liệu hoàn tất, loại bỏ Cloud Node vào Cloud Ring của User theo các nguyên tắc của Chrord: Cập nhật Succesor Node, Predecessor Node, Ring Table cho các Node.
@@ -404,3 +418,10 @@ Vấn đề: Các list:
 Vấn đề: Dung lượng lưu trữ trên các Cloud Node:
 
 Chúng ta có phải dự trù dung lượng dư thừa trên các Node hay không? trong trường hợp Successsor của một
+
+
+công việc sáng nay:
+
+- thiết kế mô hình sử dụng rabbitMQ
+- thiết kế hoàn chỉnh biểu đồ lớp
+- thiết kế một số algorithm quan trọng (lookup, update, delete Data Object).

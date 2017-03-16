@@ -1,8 +1,42 @@
-#Các kịch bản thao tác trong hệ thống
+# Phân tích yêu cầu và thiết kế chức năng hệ thống Multi Cloud Storage (MCS)
 
-###1. Kịch bản Đăng ký tài khoản.
+## 1. Giới thiệu
 
-- Đầu vào: Thông tin xác thực của tài khoản User.
+Hệ thống Multi Cloud Storage (MCS) là một hệ thống cho phép kết hợp tất cả các cơ sở lưu trữ mà người dùng đang có thành một kho lưu trữ thống nhất. Kho lưu trữ thống nhất sau khi được xây dựng sẽ cung cấp cho người dùng năng lực lưu trữ của tất cả các đám mây mà người dùng đang có, đồng thời có những tính năng nổi bật sau:
+
+- High-availability
+- Scalable
+- Fault-tolerance
+- Load-balancing
+- Redundancy storage
+
+Bên cạnh những tính năng trên, hệ thống MCS đảm bảo các tương tác với dữ liệu của người dùng như lưu trữ, truy cập thay đổi dữ liệu... được thực hiện một cách tối ưu - optimize nhất.
+
+## 2. Mục tiêu của hệ thống
+
+Hệ thống MCS được xây dựng để thực hiện hai mục tiêu chính sau:
+
+- Quản lý Data Object: Cho phép người dùng sử dụng hệ thống để lưu trữ và quản lý các Data Object bằng các thao tác như lấy về Object Data, tạo mới, di chuyển, cập nhật, xóa bỏ Data Object. Trong trường hợp Upload, cho người dùng lựa chọn số lượng bản sao của một Data Object, cho phép người dùng lựa chọn một trong 2 chế độ: hoặc người dùng tự xác định Cloud nào sẽ lưu trữ bản sao của Data Object, hoặc hệ thống sẽ tự động lựa chọn các Cloud phù hợp.
+
+- Quản lý Cloud Server: Cho phép người dùng cấu hình danh sách các Cloud Server mà người dùng có trên hệ thống, cho phép thêm mới và gỡ bỏ các Cloud Server khỏi hệ thống. Khi người dùng thực hiện thao tác gỡ bỏ Cloud Server khỏi hệ thống, hệ thống cho phép người dùng lựa chọn xem có giữ lại các Data Object đang lưu trữ trên Cloud Server đó ( di chuyển các Data Object nằm trên Cloud Server bị gỡ bỏ sang các Cloud Server còn lại của hệ thống) hay không. Bên cạnh đó, hệ thống cho phép người dùng kiểm tra trạng thái của các Cloud Server.
+
+
+## 3. Thiết kế biểu đồ lớp của hệ thống
+
+Dựa vào những gì đã phân tích ở tài liệu thiết kế hệ thống, biểu đồ lớp của hệ thống được xây dựng như sau:
+
+![class_diagram](./images/class_diagram.png)
+
+## 4. Thiết kế cơ chế xử lý các ca sử dụng của người dùng
+
+## 1. Kịch bản Đăng ký tài khoản.
+
+### Input
+
+Thông tin xác thực của tài khoản User.
+
+### Các bước xử lý
+
 - User lựa chọn hình thức đăng ký (SignUp with Email, Username & Password hoặc
   Social Authentication).
 - Email-User-Password: Người dùng nhập thông tin, sau đó sẽ có email xác thực

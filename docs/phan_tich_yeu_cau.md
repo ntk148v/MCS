@@ -5,12 +5,13 @@
 Hệ thống được dự kiến xây dựng 2 giao diện: Command-line Interface và Web-based Interface.
 Để tích hợp cả 2 giao diện này vào, chúng ta xây dựng một WSGI Server, 2 giao diện trên sẽ tương tác với WSGI Server thông qua RESTFul API.
 
+Các ca sử dụng dưới đây được xây dựng dựa trên tiền đề là: Môi trường tương tác của người dùng là thông qua giao diện Web của hệ thống
+
 ### Use Case 1: Tạo tài khoản
 
-Kịch bản: Người dùng muốn tạo một tài khoản trên hệ thống
+Kịch bản: Người dùng truy cập vào giao diện tạo User mới trên trang Web
 
 Input:
-
 - Account_authentication:
     - Trường hợp 1: Google/Facebook/.. Authentication
     - Trường hợp 2: Account name/Password Authentication
