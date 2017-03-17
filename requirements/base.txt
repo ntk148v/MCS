@@ -10,4 +10,4 @@ mysql-python
 
 django-allauth
 
-calplus
+# calplus

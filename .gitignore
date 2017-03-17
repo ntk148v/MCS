@@ -55,12 +55,12 @@ venv
 *.iml
 *.iws
 
-scs/settings/local.py
-scs/settings/production.py
+mcs/settings/local.py
+mcs/settings/production.py
 
 # collect static output directory
-scs/assets/
-scs/static/
+mcs/assets/
+mcs/static/
 
 .DS_Store
 
@@ -68,5 +68,5 @@ scs/static/
 node_modules/
 
 # bower packages
-scs/assets-src/vendor/
+mcs/assets-src/vendor/
 .sass-cache/
