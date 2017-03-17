@@ -1,56 +1,5 @@
 # Phân tích yêu cầu và thiết kế chức năng hệ thống Multi Cloud Storage (MCS)
 
-Table of Contents
-=================
-
-* [Phân tích yêu cầu và thiết kế chức năng hệ thống Multi Cloud Storage (MCS)](#phân-tích-yêu-cầu-và-thiết-kế-chức-năng-hệ-thống-multi-cloud-storage-mcs)
-  * [1. Giới thiệu](#1-giới-thiệu)
-  * [2. Mục tiêu của hệ thống](#2-mục-tiêu-của-hệ-thống)
-  * [3. Thiết kế biểu đồ lớp của hệ thống](#3-thiết-kế-biểu-đồ-lớp-của-hệ-thống)
-  * [4. Thiết kế cơ chế xử lý các ca sử dụng của người dùng](#4-thiết-kế-cơ-chế-xử-lý-các-ca-sử-dụng-của-người-dùng)
-      * [4.1 Đăng ký tài khoản](#41-Đăng-ký-tài-khoản)
-        * [4.1.1 Input](#411-input)
-        * [4.1.2 Các bước xử lý](#412-các-bước-xử-lý)
-        * [4.1.3 Output](#413-output)
-      * [4.2 Đăng nhập tài khoản](#42-Đăng-nhập-tài-khoản)
-        * [4.2.1 Input](#421-input)
-        * [4.2.2 Các bước xử lý](#422-các-bước-xử-lý)
-        * [4.2.3 Output](#423-output)
-      * [4.3 Khởi tạo các CloudNode cho tài khoản](#43-khởi-tạo-các-cloudnode-cho-tài-khoản)
-        * [4.3.1 Input](#431-input)
-        * [4.3.2 Các bước xử lý](#432-các-bước-xử-lý)
-        * [4.3.3 Output](#433-output)
-      * [4.4 Tạo một DataObject / 1 Folder mới trên hệ thống](#44-tạo-một-dataobject--1-folder-mới-trên-hệ-thống)
-        * [4.4.1 Input](#441-input)
-        * [4.4.2 Các bước xử lý](#442-các-bước-xử-lý)
-        * [4.4.3 Output](#443-output)
-      * [4.5 Tải một Folder (bên trong có nhiều File/Folder con) lên hệ thống](#45-tải-một-folder-bên-trong-có-nhiều-filefolder-con-lên-hệ-thống)
-      * [4.6 Mở nội dung file - Download file](#46-mở-nội-dung-file---download-file)
-        * [4.6.1 Input](#461-input)
-        * [4.6.2 Các bước xử lý](#462-các-bước-xử-lý)
-        * [4.6.3 Output](#463-output)
-      * [4.7 Tải xuống một thư mục (khác với xem nội dung thư mục - ở đây là lấy toàn bộ nội dung thư mục về)](#47-tải-xuống-một-thư-mục-khác-với-xem-nội-dung-thư-mục---ở-đây-là-lấy-toàn-bộ-nội-dung-thư-mục-về)
-      * [4.8 Cập nhật nội dung của DataObject](#48-cập-nhật-nội-dung-của-dataobject)
-        * [4.8.1 Input](#481-input)
-        * [4.8.2 Các bước xử lý](#482-các-bước-xử-lý)
-      * [4.9 Xóa một DataObject khỏi hệ thống](#49-xóa-một-dataobject-khỏi-hệ-thống)
-        * [4.9.1 Input:](#491-input)
-        * [4.9.2 Các bước thực hiện:](#492-các-bước-thực-hiện)
-        * [4.9.3 Output:](#493-output)
-      * [4.10 Monitor các CloudNode - Kiểm tra dung lượng lưu trữ](#410-monitor-các-cloudnode---kiểm-tra-dung-lượng-lưu-trữ)
-        * [4.10.1 Input](#4101-input)
-        * [4.10.2 Các bước thực hiện](#4102-các-bước-thực-hiện)
-        * [4.10.3 Output](#4103-output)
-      * [4.11 Monitor các CloudNode - Kiểm tra status của CloudNode.](#411-monitor-các-cloudnode---kiểm-tra-status-của-cloudnode)
-        * [4.11.1 Input](#4111-input)
-        * [4.11.2 Các bước xử lý](#4112-các-bước-xử-lý)
-        * [4.11.3 Output](#4113-output)
-      * [4.12 Thêm mới CloudNode vào CloudRing](#412-thêm-mới-cloudnode-vào-cloudring)
-      * [4.13 Loại bỏ CloudNode khỏi CloudRing](#413-loại-bỏ-cloudnode-khỏi-cloudring)
-      * [4.14 Xóa folder](#414-xóa-folder)
-        * [4.14.1 Input](#4141-input)
-        * [4.14 Các bước thực hiện](#414-các-bước-thực-hiện)
-
 ## 1. Giới thiệu
 
 Hệ thống Multi Cloud Storage (MCS) là một hệ thống cho phép kết hợp tất cả các cơ sở lưu trữ mà người dùng đang có thành một kho lưu trữ thống nhất. Kho lưu trữ thống nhất sau khi được xây dựng sẽ cung cấp cho người dùng năng lực lưu trữ của tất cả các đám mây mà người dùng đang có, đồng thời có những tính năng nổi bật sau:
@@ -248,19 +197,19 @@ Lý do mà ở bước 1 phải có 2 trạng thái **PRE\_UPDATE** và **UPDATI
 
 ### 4.9 Xóa một DataObject khỏi hệ thống
 
-#### 4.9.1 Input:
+#### 4.9.1 Input
 
 - File được lựa chọn sẽ xóa.
 
-#### 4.9.2 Các bước thực hiện:
+#### 4.9.2 Các bước thực hiện
 
 1. Từ id của DataObject (đại diện cho file được chọn), lấy được danh sách các Replica.
-2. Từ danh sách các Replica, id của Replica, và CloudRing lookup được các CloudNode chứa Replica đó. Sau đó tiến hành gửi Request DELETE xuống. Tuy nhiên vẫn giữ lại 1 Replica mang tính chất backup, nếu người dùng muốn thay đổi quyết định sau này, Replica này sẽ được xóa sau 30 ngày. 
+1. Từ danh sách các Replica, id của Replica, và CloudRing lookup được các CloudNode chứa Replica đó. Sau đó tiến hành gửi Request DELETE xuống. Tuy nhiên vẫn giữ lại 1 Replica mang tính chất backup, nếu người dùng muốn thay đổi quyết định sau này, Replica này sẽ được xóa sau 30 ngày.
 
-#### 4.9.3 Output:
+#### 4.9.3 Output
 
 1. Thông báo kết quả xóa: thành công hay thất bại.
-2. Thông báo sẽ có thư mục backup (Trash) sẽ lưu trữ những file đã được chọn xóa. Sau 30 ngày sẽ xóa vĩnh viễn.
+1. Thông báo sẽ có thư mục backup (Trash) sẽ lưu trữ những file đã được chọn xóa. Sau 30 ngày sẽ xóa vĩnh viễn.
 
 ### 4.10 Monitor các CloudNode - Kiểm tra dung lượng lưu trữ
 
@@ -271,7 +220,7 @@ CloudNode muốn kiểm tra dung lượng.
 #### 4.10.2 Các bước thực hiện
 
 1. Dựa vào CloudConfig có endpoint và các thông tin xác thực, tiến hành đẩy Request kiểm tra Quota của CloudNode đó.
-2. Trả về kết quả cho người dùng dạng biểu đồ tròn.
+1. Trả về kết quả cho người dùng dạng biểu đồ tròn.
 
 #### 4.10.3 Output
 
@@ -287,7 +236,7 @@ CloudNode muốn kiểm tra status.
 
 1. Dựa vào CloudConfig có endpoint, thực hiện PING/TELNET đến CloudNode đó. Đây là phương pháp tối giản chỉ phù hợp
    giả thuyết các CloudNode có kiến trúc đơn giản, mạng không quá phức tạp (Không chia thành Region...)
-2. Dựa vào kết quả bước 1, kết hợp với 4.10 (Kiểm tra dung lượng) đưa ra status của CloudNode.
+1. Dựa vào kết quả bước 1, kết hợp với 4.10 (Kiểm tra dung lượng) đưa ra status của CloudNode.
 
 #### 4.11.3 Output
 
@@ -305,7 +254,17 @@ Folder được lựa chọn sẽ xóa
 
 #### 4.14 Các bước thực hiện
 
-1. 
+
+## Các công việc cần thực hiện
+
+1. Chỉnh sửa tài liệu thiết kế hệ thống theo hướng áp dụng RabbitMQ
+1. Viết thêm lý do chúng ta cần có các list sau trong thông tin của User:
+    - updating_objects
+    - deleting_objects
+    - creating_objects
+    - recovering\_failed\_replica_object
+1. Đề xuất cơ chế sinh ID mới (thay vì sử dụng phương pháp của Chord là Hash Name tạo ID) để phù hợp với yêu cầu của hệ thống, vì trong yêu cầu mới, hệ thống sẽ chọn các Cloud phù hợp => có lựa chọn chứ không còn là sự lựa chọn ngẫu nhiên trong Chord nữa. Thậm chí nếu cảm thấy Chord không phù hợp => sử dụng phương pháp khác thay thế Chord.
+
 
 <!--## 7. Kịch bản Update file.
 
@@ -368,3 +327,55 @@ Folder được lựa chọn sẽ xóa
 - Ping đến CloudServer?
 - Bắn bản tin đến CloudServer theo ip và port. (Với AmazonS3?)
 - Check health qua API?-->
+
+
+<!--Table of Contents
+=================
+
+* [Phân tích yêu cầu và thiết kế chức năng hệ thống Multi Cloud Storage (MCS)](#phân-tích-yêu-cầu-và-thiết-kế-chức-năng-hệ-thống-multi-cloud-storage-mcs)
+  * [1. Giới thiệu](#1-giới-thiệu)
+  * [2. Mục tiêu của hệ thống](#2-mục-tiêu-của-hệ-thống)
+  * [3. Thiết kế biểu đồ lớp của hệ thống](#3-thiết-kế-biểu-đồ-lớp-của-hệ-thống)
+  * [4. Thiết kế cơ chế xử lý các ca sử dụng của người dùng](#4-thiết-kế-cơ-chế-xử-lý-các-ca-sử-dụng-của-người-dùng)
+      * [4.1 Đăng ký tài khoản](#41-Đăng-ký-tài-khoản)
+        * [4.1.1 Input](#411-input)
+        * [4.1.2 Các bước xử lý](#412-các-bước-xử-lý)
+        * [4.1.3 Output](#413-output)
+      * [4.2 Đăng nhập tài khoản](#42-Đăng-nhập-tài-khoản)
+        * [4.2.1 Input](#421-input)
+        * [4.2.2 Các bước xử lý](#422-các-bước-xử-lý)
+        * [4.2.3 Output](#423-output)
+      * [4.3 Khởi tạo các CloudNode cho tài khoản](#43-khởi-tạo-các-cloudnode-cho-tài-khoản)
+        * [4.3.1 Input](#431-input)
+        * [4.3.2 Các bước xử lý](#432-các-bước-xử-lý)
+        * [4.3.3 Output](#433-output)
+      * [4.4 Tạo một DataObject / 1 Folder mới trên hệ thống](#44-tạo-một-dataobject--1-folder-mới-trên-hệ-thống)
+        * [4.4.1 Input](#441-input)
+        * [4.4.2 Các bước xử lý](#442-các-bước-xử-lý)
+        * [4.4.3 Output](#443-output)
+      * [4.5 Tải một Folder (bên trong có nhiều File/Folder con) lên hệ thống](#45-tải-một-folder-bên-trong-có-nhiều-filefolder-con-lên-hệ-thống)
+      * [4.6 Mở nội dung file - Download file](#46-mở-nội-dung-file---download-file)
+        * [4.6.1 Input](#461-input)
+        * [4.6.2 Các bước xử lý](#462-các-bước-xử-lý)
+        * [4.6.3 Output](#463-output)
+      * [4.7 Tải xuống một thư mục (khác với xem nội dung thư mục - ở đây là lấy toàn bộ nội dung thư mục về)](#47-tải-xuống-một-thư-mục-khác-với-xem-nội-dung-thư-mục---ở-đây-là-lấy-toàn-bộ-nội-dung-thư-mục-về)
+      * [4.8 Cập nhật nội dung của DataObject](#48-cập-nhật-nội-dung-của-dataobject)
+        * [4.8.1 Input](#481-input)
+        * [4.8.2 Các bước xử lý](#482-các-bước-xử-lý)
+      * [4.9 Xóa một DataObject khỏi hệ thống](#49-xóa-một-dataobject-khỏi-hệ-thống)
+        * [4.9.1 Input:](#491-input)
+        * [4.9.2 Các bước thực hiện:](#492-các-bước-thực-hiện)
+        * [4.9.3 Output:](#493-output)
+      * [4.10 Monitor các CloudNode - Kiểm tra dung lượng lưu trữ](#410-monitor-các-cloudnode---kiểm-tra-dung-lượng-lưu-trữ)
+        * [4.10.1 Input](#4101-input)
+        * [4.10.2 Các bước thực hiện](#4102-các-bước-thực-hiện)
+        * [4.10.3 Output](#4103-output)
+      * [4.11 Monitor các CloudNode - Kiểm tra status của CloudNode.](#411-monitor-các-cloudnode---kiểm-tra-status-của-cloudnode)
+        * [4.11.1 Input](#4111-input)
+        * [4.11.2 Các bước xử lý](#4112-các-bước-xử-lý)
+        * [4.11.3 Output](#4113-output)
+      * [4.12 Thêm mới CloudNode vào CloudRing](#412-thêm-mới-cloudnode-vào-cloudring)
+      * [4.13 Loại bỏ CloudNode khỏi CloudRing](#413-loại-bỏ-cloudnode-khỏi-cloudring)
+      * [4.14 Xóa folder](#414-xóa-folder)
+        * [4.14.1 Input](#4141-input)
+        * [4.14 Các bước thực hiện](#414-các-bước-thực-hiện)-->
