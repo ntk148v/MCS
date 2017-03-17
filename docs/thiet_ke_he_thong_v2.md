@@ -1,4 +1,4 @@
-# Thiết kế hệ thống Scalable Cloud Storage
+# Thiết kế hệ thống Multi Cloud Storage
 
 ## 1. Giới thiệu
 
@@ -10,7 +10,7 @@ Sự phát triển của các hệ thống Cloud Object Storage đem đến cho 
 - Nhu cầu lưu trữ dữ liệu trên nhiều nền tảng khác nhau của người dùng có nhiều nhà cung cấp dịch vụ Object Storage.
 - Nhu cầu tương tác, đồng bộ dữ liệu giữa 2 dịch vụ Cloud Object Storage.
 
-Xuất phát từ nhu cầu thực tiễn của người dùng, nhóm phát triển quyết định xây dựng một hệ thống cho phép giải quyết các vấn đề đã nêu trên. Hệ thống được xây dựng có tên là: Scalable Cloud Storage (SCS). SCS giúp người dùng:
+Xuất phát từ nhu cầu thực tiễn của người dùng, nhóm phát triển quyết định xây dựng một hệ thống cho phép giải quyết các vấn đề đã nêu trên. Hệ thống được xây dựng có tên là: Multi Cloud Storage (MCS). MCS giúp người dùng:
 
 - Giải quyết vấn đề tương tác cùng một lúc với nhiều dịch vụ Cloud Object Storage.
 - Cho phép người dùng mở rộng khả năng lưu trữ một cách dễ dàng.
@@ -19,11 +19,11 @@ Xuất phát từ nhu cầu thực tiễn của người dùng, nhóm phát tri�
 
 ## 2. Ngữ cảnh.
 
-Trong phần này, chúng ta sẽ trình bày một kịch bản thực tế được sử dụng để làm cơ sở xuất phát cho việc xây dựng hệ thống SCS:
+Trong phần này, chúng ta sẽ trình bày một kịch bản thực tế được sử dụng để làm cơ sở xuất phát cho việc xây dựng hệ thống MCS:
 
 Một tập đoàn lớn có nhiều công ty con, mỗi một công ty con sở hữu hàng loạt các cơ sở lưu trữ dữ liệu sử dụng nhiều công nghệ lưu trữ khác nhau như như swift, amazon S3, Ceph, Google Cloud Storage, vv... Dữ liệu và các cơ sở lưu trữ của các công ty con là riêng biệt và độc lập với nhau.
 
-Tập đoàn sẽ triển khai hệ thống SCS để thực hiện nhiệm vụ chính của SCS, đó là tích hợp tất cả các cơ sở lưu trữ dữ liệu mà một công ty con đang có thành một cơ sở lưu trữ dữ liệu thống nhất cho công ty con đó. Các yêu cầu khác của tập đoàn đối với hệ thống SCS là:
+Tập đoàn sẽ triển khai hệ thống MCS để thực hiện nhiệm vụ chính của MCS, đó là tích hợp tất cả các cơ sở lưu trữ dữ liệu mà một công ty con đang có thành một cơ sở lưu trữ dữ liệu thống nhất cho công ty con đó. Các yêu cầu khác của tập đoàn đối với hệ thống MCS là:
 
 - Hệ thống được xây dựng phải phục vụ cho cả tập đoàn, tuy nhiên phải đảm các công ty độc lập với nhau.
 - Dữ liệu do các công ty đưa lên được phân phối đều trên các cloud của công ty đó.

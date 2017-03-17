@@ -217,7 +217,7 @@ Lý do mà ở bước 1 phải có 2 trạng thái **PREPARE\_UPDATING** và **
 - Tiến hành PUT content đến CloudServer chứa replica (Dựa vào CloudRing và chord để
   tìm ra được vị trí của replica). Content mới sẽ thay thế content cũ, replica được
   cập nhật. Chuyển trạng thái của replica về updated = True, các replica khác
-  updated = False. Khi có request đến SCS, yêu cầu file này, request sẽ được chuyển
+  updated = False. Khi có request đến MCS, yêu cầu file này, request sẽ được chuyển
   hướng ưu tiên đến replica với trạng thái updated = True.
 - Định kỳ, sau một khoảng thời gian t, `daemon process` tiếp tục đẩy bản update trong
   cache queue đến các replica còn lại (Cần có cơ chế tránh lưu các replica trong

@@ -47,10 +47,10 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'scs.urls'
+ROOT_URLCONF = 'mcs.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'scs.wsgi.application'
+WSGI_APPLICATION = 'mcs.wsgi.application'
 
 # Database
 

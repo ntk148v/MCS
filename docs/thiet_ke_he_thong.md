@@ -1,4 +1,4 @@
-# Thiết kế hệ thống Scalable Cloud Storage
+# Thiết kế hệ thống Multi Cloud Storage
 
 ## 1. Giới thiệu
 
@@ -11,7 +11,7 @@ Sự phát triển của các hệ thống Cloud Object Storage đem đến cho 
 - Nhu cầu tương tác, đồng bộ dữ liệu giữa 2 Cloud Object Storage.
 - Implement phương thức lưu trữ Object Storage trên nền tảng các phương thức lưu trữ khác ( như Block Storage, File System Storage, ...) và tương tác/ đồng bộ các phương thức lưu trữ này với các phương thức lưu trữ Object Storage.
 
-Xuất phát từ nhu cầu thực tiễn của người dùng, nhóm phát triển quyết định xây dựng một hệ thống cho phép giải quyết các vấn đề đã nêu trên. Hệ thống được xây dựng có tên là: Scalable Cloud Storage (SCS). SCS cho phép kết hợp tất cả các cơ sở lưu trữ mà người dùng đang có thành một kho lưu trữ thống nhất. Kho lưu trữ thống nhất sau khi được xây dựng sẽ cung cấp cho người dùng năng lực lưu trữ của tất cả các đám mây mà người dùng đang có, đồng thời có những tính năng nổi bật sau:
+Xuất phát từ nhu cầu thực tiễn của người dùng, nhóm phát triển quyết định xây dựng một hệ thống cho phép giải quyết các vấn đề đã nêu trên. Hệ thống được xây dựng có tên là: Multi Cloud Storage (MCS). MCS cho phép kết hợp tất cả các cơ sở lưu trữ mà người dùng đang có thành một kho lưu trữ thống nhất. Kho lưu trữ thống nhất sau khi được xây dựng sẽ cung cấp cho người dùng năng lực lưu trữ của tất cả các đám mây mà người dùng đang có, đồng thời có những tính năng nổi bật sau:
 
 - High-availability
 - Scalable
@@ -19,19 +19,19 @@ Xuất phát từ nhu cầu thực tiễn của người dùng, nhóm phát tri�
 - Load-balancing
 - Redundancy storage
 
-Bên cạnh những tính năng trên, hệ thống SCS đảm bảo các tương tác với dữ liệu của người dùng như lưu trữ, truy cập thay đổi dữ liệu... được thực hiện một cách tối ưu - optimize nhất.
+Bên cạnh những tính năng trên, hệ thống MCS đảm bảo các tương tác với dữ liệu của người dùng như lưu trữ, truy cập thay đổi dữ liệu... được thực hiện một cách tối ưu - optimize nhất.
 
-### 1.1 SCS Case Study
+### 1.1 MCS Case Study
 
-Hệ thống SCS phù hợp để giải quyết các trường hợp thực tế sau:
+Hệ thống MCS phù hợp để giải quyết các trường hợp thực tế sau:
 
 ## 2. Scenario - System Environment
 
-Trong phần này, chúng ta sẽ trình bày một kịch bản thực tế được sử dụng để làm cơ sở xuất phát cho việc xây dựng hệ thống SCS:
+Trong phần này, chúng ta sẽ trình bày một kịch bản thực tế được sử dụng để làm cơ sở xuất phát cho việc xây dựng hệ thống MCS:
 
 Một tập đoàn lớn có nhiều công ty con, mỗi một công ty con sở hữu hàng loạt các cơ sở lưu trữ dữ liệu sử dụng nhiều công nghệ lưu trữ khác nhau như như swift, amazon S3, Ceph, Google Cloud Storage, vv... Dữ liệu và các cơ sở lưu trữ của các công ty con là riêng biệt và độc lập với nhau.
 
-Tập đoàn sẽ triển khai hệ thống SCS để thực hiện nhiệm vụ chính của SCS, đó là tích hợp tất cả các cơ sở lưu trữ dữ liệu mà một công ty con đang có thành một cơ sở lưu trữ dữ liệu thống nhất cho công ty con đó. Các yêu cầu khác của tập đoàn đối với hệ thống SCS là:
+Tập đoàn sẽ triển khai hệ thống MCS để thực hiện nhiệm vụ chính của MCS, đó là tích hợp tất cả các cơ sở lưu trữ dữ liệu mà một công ty con đang có thành một cơ sở lưu trữ dữ liệu thống nhất cho công ty con đó. Các yêu cầu khác của tập đoàn đối với hệ thống MCS là:
 
 - Hệ thống được xây dựng phải phục vụ cho cả tập đoàn, tuy nhiên phải đảm các công ty độc lập với nhau.
 - Dữ liệu do các công ty đưa lên được phân phối đều trên các cloud của công ty đó.
@@ -43,27 +43,27 @@ Tập đoàn sẽ triển khai hệ thống SCS để thực hiện nhiệm vụ
 
 ### 3.1 Xây dựng mô hình kiến trúc hệ thống
 
-Xuất phát từ mục tiêu đầu tiên của hệ thống SCS, là tích hợp nhiều hệ thống lưu trữ dữ liệu của một người dùng thành một hệ thống lưu trữ thống nhất, chúng ta tiến hành thiết kế mô hình kiến trúc và xác định các thành phần cơ bản của hệ thống lưu trữ thống nhất multi-cloud:
+Xuất phát từ mục tiêu đầu tiên của hệ thống MCS, là tích hợp nhiều hệ thống lưu trữ dữ liệu của một người dùng thành một hệ thống lưu trữ thống nhất, chúng ta tiến hành thiết kế mô hình kiến trúc và xác định các thành phần cơ bản của hệ thống lưu trữ thống nhất multi-cloud:
 
 Một cách tổng quát nhất, hệ thống có kiến trúc như sau:
 
 ![System Architect](./images/large_view_architect.png)
 
-Mô hình kiến trúc phía trên là mô hình kiến trúc đầy đủ của hệ thống, với đầy đủ các thành phần, cùng với đó là hệ thống SCS được scaling để thể hiện đầy đủ các tính chất của một hệ thống phân tán, và phục vụ cho nhiều người dùng cùng một lúc, với mỗi người dùng có tập các hệ thống lưu trữ độc lập với nhau. Tuy nhiên, sử dụng kiến trúc đầy đủ này để thiết kế hệ thống là không phù hợp, do kiến trúc này quá phức tạp và không tập trung vào nhiệm vụ quan trọng nhất của hệ thống, đó là: Tích hợp các hệ thống lưu trữ của một người dùng thành một cơ sở lưu trữ thống nhất cho người đó. Đặt trọng tâm vào giải quyết nhiệm vụ này, chúng ta sẽ sử dụng mô hình kiến trúc sau để thiết kế hệ thống:
+Mô hình kiến trúc phía trên là mô hình kiến trúc đầy đủ của hệ thống, với đầy đủ các thành phần, cùng với đó là hệ thống MCS được scaling để thể hiện đầy đủ các tính chất của một hệ thống phân tán, và phục vụ cho nhiều người dùng cùng một lúc, với mỗi người dùng có tập các hệ thống lưu trữ độc lập với nhau. Tuy nhiên, sử dụng kiến trúc đầy đủ này để thiết kế hệ thống là không phù hợp, do kiến trúc này quá phức tạp và không tập trung vào nhiệm vụ quan trọng nhất của hệ thống, đó là: Tích hợp các hệ thống lưu trữ của một người dùng thành một cơ sở lưu trữ thống nhất cho người đó. Đặt trọng tâm vào giải quyết nhiệm vụ này, chúng ta sẽ sử dụng mô hình kiến trúc sau để thiết kế hệ thống:
 
 ![System Architect](./images/system_architect.png)
 
 Dưới góc nhìn này, hệ thống bao gồm các thành phần chính sau:
 
-- SCS: Hệ thống chính mà chúng ta xây dựng, bao gồm WSGI Server để nhận và xử lý request của người dùng, và các Deamon Process thực hiện các chức năng của hệ thống.
-- SQL Database Server: Lưu trữ dữ liệu của hệ thống SCS
+- MCS: Hệ thống chính mà chúng ta xây dựng, bao gồm WSGI Server để nhận và xử lý request của người dùng, và các Deamon Process thực hiện các chức năng của hệ thống.
+- SQL Database Server: Lưu trữ dữ liệu của hệ thống MCS
 - Các cloud: Tập hợp các cơ sở lưu trữ
 
-Để bắt đầu việc thiết kế hệ thống SCS, chúng ta đi vào phân tích nhiệm vụ chính của SCS: kết hợp tất cả các Cloud Storage Server của một User thành một kho lưu trữ thống nhất cho user đó.
+Để bắt đầu việc thiết kế hệ thống MCS, chúng ta đi vào phân tích nhiệm vụ chính của MCS: kết hợp tất cả các Cloud Storage Server của một User thành một kho lưu trữ thống nhất cho user đó.
 
 ### 3.2 Storage Cloud, Data Object và Chord Protocol
 
-Mục đích của việc tạo ra kho lưu trữ thống nhất, đó là cho phép người dùng hệ thống có thể sử dụng hệ thống để lưu trữ các data object hiệu quả mà không cần quan tâm tới việc object được lưu trữ như thế nảo ở hạ tầng lưu trữ bên dưới. Đó là cái nhìn ở góc độ người dùng. Còn ở góc độ người thiết kế hệ thống SCS, chúng ta hiểu rằng, bản chất của việc lưu trữ một Data Object vào hệ thống là việc lưu trữ các bản sao Data Object đó lên các cơ sở dữ liệu mà người dùng sở hữu, và nhiệm vụ của chúng ta là xây dựng các cơ chế để thực hiện công việc lưu trữ này một cách hiệu quả nhất. Các cơ chế được xây dựng để giải quyết các vấn đề sau:
+Mục đích của việc tạo ra kho lưu trữ thống nhất, đó là cho phép người dùng hệ thống có thể sử dụng hệ thống để lưu trữ các data object hiệu quả mà không cần quan tâm tới việc object được lưu trữ như thế nảo ở hạ tầng lưu trữ bên dưới. Đó là cái nhìn ở góc độ người dùng. Còn ở góc độ người thiết kế hệ thống MCS, chúng ta hiểu rằng, bản chất của việc lưu trữ một Data Object vào hệ thống là việc lưu trữ các bản sao Data Object đó lên các cơ sở dữ liệu mà người dùng sở hữu, và nhiệm vụ của chúng ta là xây dựng các cơ chế để thực hiện công việc lưu trữ này một cách hiệu quả nhất. Các cơ chế được xây dựng để giải quyết các vấn đề sau:
 
 - Khi người dùng tài khoản này muốn lưu trữ một Data Object mới trên hệ thống, hệ thống sẽ sao lưu data Object trên thành bao nhiêu bản, và mỗi bản sao của Data Object trên sẽ được lưu trong Cloud nào trong số các Cloud mà tài khoản sở hữu?
 - Khi người dùng tài khoản muốn lấy từ hệ thống về nội dung của một Data Object, làm sao để chúng ta biết chúng ta có thể lấy nội dung Data Object này từ Cloud nào trong số các Cloud của tài khoản? (Lưu ý là một Data Object có nhiều bản sao lưu trên nhiều Cloud Server khác nhau)
@@ -78,7 +78,7 @@ Tại sao chúng ta lại lựa chọn Chord Protocol làm nền tảng để x�
 
 #### Lý do lựa chọn Chord protocol
 
-#### Xây dựng các cơ chế lưu trữ cho SCS trên nền tảng Chord Protocol
+#### Xây dựng các cơ chế lưu trữ cho MCS trên nền tảng Chord Protocol
 
 ### 3.3 Cloud Ring, Cloud Node và Data Object
 
@@ -128,9 +128,9 @@ function InitCloudRing(Cloud_List){
 
 Sau khi xây dụng xong Cloud Ring, chúng ta sẽ lưu thông tin Cloud Ring vào tài khoản User. Bước tiếp theo, chúng ta sẽ xây dựng cơ chế lưu trữ một Data Object lên hệ thống.
 
-### 3.5 Process Data Object x in SCS System
+### 3.5 Process Data Object x in MCS System
 
-Trong quá trình thiết kế cơ chế lưu trữ Data Object cho hệ thống SCS, chúng ta sẽ gặp và phải giải quyết hàng loạt vấn đề liên quan tới các tác vụ xung quanh Data Object, như các tác vụ lưu trữ, cập nhật, truy cập, xóa bỏ (CRUD process), cân bằng tải,vv..., cũng như hàng loạt các các yêu cầu đặt ra cho hệ thống về tốc độ - hiệu năng, tính high-available, tính replication - consistency của data,... khi hệ thống thực hiện các tác vụ nói trên. Chúng ta sẽ phân tích các vấn đề trên và tìm giải pháp để thiết kế một cơ chế lưu trữ phù hợp với các yêu cầu đã được đặt ra.
+Trong quá trình thiết kế cơ chế lưu trữ Data Object cho hệ thống MCS, chúng ta sẽ gặp và phải giải quyết hàng loạt vấn đề liên quan tới các tác vụ xung quanh Data Object, như các tác vụ lưu trữ, cập nhật, truy cập, xóa bỏ (CRUD process), cân bằng tải,vv..., cũng như hàng loạt các các yêu cầu đặt ra cho hệ thống về tốc độ - hiệu năng, tính high-available, tính replication - consistency của data,... khi hệ thống thực hiện các tác vụ nói trên. Chúng ta sẽ phân tích các vấn đề trên và tìm giải pháp để thiết kế một cơ chế lưu trữ phù hợp với các yêu cầu đã được đặt ra.
 
 #### 3.5.1 Create Data Object Process
 
@@ -140,7 +140,7 @@ Chúng ta sẽ đáp ứng yêu cầu (\*) bằng cách tạo ra **k** bản sao
 
 **Note**: Hiện tại trong các ví dụ, để đơn giản chúng ta sử dụng tên tương đối của Object. Trong phần xử lý Folder, chúng ta sẽ biết rằng tên thực sự của Object được sử dụng trong hệ thống là tên tuyệt đối theo đường dẫn từ Root Folder, chứ không phải là tên tương đối.
 
-Lúc này, các replica của **x** sẽ có vai trò như các giá trị **Value** trong hệ thống sử dụng Chord Protocol. Để lưu trữ các replica của **x**, hệ thống sẽ hash tên của các replica (vừa được tạo ra ở bước trước) để tạo thành **replicaID** cho các replica này. Saud đó, cặp \<**replicaID**,**x.Data**\> sẽ tạo thành các **Key-Value** trong hệ thống Chord Protocol. Sau đó, hệ thống SCS sẽ sử dụng Chord Protocol để tìm ra Successor Node tương ứng với **replicaID** của từng cặp \<**replicaID**,**x.Data**\>. Cloud tương ứng với Sucessor Nodeđó sẽ được chọn để lưu trữ cặp \<**replicaID**,**x.Data**\> này.
+Lúc này, các replica của **x** sẽ có vai trò như các giá trị **Value** trong hệ thống sử dụng Chord Protocol. Để lưu trữ các replica của **x**, hệ thống sẽ hash tên của các replica (vừa được tạo ra ở bước trước) để tạo thành **replicaID** cho các replica này. Saud đó, cặp \<**replicaID**,**x.Data**\> sẽ tạo thành các **Key-Value** trong hệ thống Chord Protocol. Sau đó, hệ thống MCS sẽ sử dụng Chord Protocol để tìm ra Successor Node tương ứng với **replicaID** của từng cặp \<**replicaID**,**x.Data**\>. Cloud tương ứng với Sucessor Nodeđó sẽ được chọn để lưu trữ cặp \<**replicaID**,**x.Data**\> này.
 
 Một vấn đề xảy ra ở đây, đó là có thể xảy ra trường hợp Cloud Node của một replicaID nào đó đã bị đầy - không thể chứa thêm Object nữa, hoặc không đủ khả năng để chứa Object này. Giải pháp của chúng ta trong trường hợp này, đó là trước khi lưu một replica của x vào một Cloud Node là Successor Node của replicaID, chúng ta cần kiểm tra xem Cloud Node đó có đủ khả năng lưu trữ replica đó không. Nếu trong trường hợp Cloud Node không có đủ khả năng lưu trữ replica của x, chúng ta sẽ sinh ra một tên khác cho replica này và tạo ra một ReplicaID mới, sao cho replica này sẽ được lưu vào một Cloud Node khác có đủ khả năng chứa nó. Trong một số trường hợp khi hệ thống quá tải (Ví dụ khi có quá nhiều Cloud Node trong hệ thống không còn đủ khả năng lưu trữ Data Object mới), chúng ta có thể cảnh báo User về tình trạng hệ thống.
 
@@ -161,25 +161,25 @@ Vấn đề tiếp theo mà chúng ta cần giải quyết, đó là sau khi Dat
 
 Sau phần giải quyết vấn đề lưu trữ một Data Object mới lên hệ thống, chúng ta hiểu rằng một Data Object **x** bất kỳ sẽ có **k** replica lưu trên **k** Cloud Server, mỗi một replica có một **replicaID** riêng, và chỉ cần có được một trong số các replicaID là chúng ta có thể sử dụng Cloud Ring để tìm và lấy được nội dung của Data Object **x**. Tuy nhiên, chúng ta thấy rằng, không có cách nào để sinh ra trực tiếp replicaID từ tên của Data Object **x**. Do vậy, chúng ta cần phải có cách để lưu trữ các thông tin về các replica của **x**, hay nói cách khác chính là các **replicaID**.
 
-Thông tin về các Replica của **x** cũng chính là các thông tin liên quan tới **x**, chúng được gọi là **Object metadata** của **x**. Vì vậy, giải pháp được sử dụng trong hệ thống SCS để thực hiện tác vụ Lookup và Get Data Object **x**, đó là tạo ra và lưu trữ đối tượng **Object metadata** của x. **Object metadata** của x sẽ lưu trữ các thông tin liên quan tới **x**, với vấn đề Lookup Data Object của chúng ta, thông tin về các bản sao của **x** và **x.Object\_Name** sẽ được lưu vào Object metadata.
+Thông tin về các Replica của **x** cũng chính là các thông tin liên quan tới **x**, chúng được gọi là **Object metadata** của **x**. Vì vậy, giải pháp được sử dụng trong hệ thống MCS để thực hiện tác vụ Lookup và Get Data Object **x**, đó là tạo ra và lưu trữ đối tượng **Object metadata** của x. **Object metadata** của x sẽ lưu trữ các thông tin liên quan tới **x**, với vấn đề Lookup Data Object của chúng ta, thông tin về các bản sao của **x** và **x.Object\_Name** sẽ được lưu vào Object metadata.
 
 Quá trình lookup **cơ bản** sẽ diễn ra như sau:
 
-Khi nhận được lookup request, SCS sẽ lấy ra thông tin **Object\_Name** từ request, và tìm trong cơ sở dữ liệu **Object Metadata** nào tương ứng với **Object\_Name** này. Sau đó SCS sẽ lấy ra một **replicaID** trong số các **replicaID** của Object đó, và dựa vào thuật toán Lookup của Chord Protocol để tìm xem Cloud Node nào đang chứa replica tương ứng với replicaID này (replicaID's successor Node). Bước cuối cùng, SCS Server trả về cho User các thông tin cần thiết như: replicaID và thông tin định danh của Cloud  để User có thể kết nối trực tiếp tới Cloud Server để lấy nội dung của Data Object **x** về. Cơ chế tương tác trực tiếp giữa User và Cloud Server cho phép dữ liệu không cần phải đi qua hệ thống trung gian là SCS, qua đó giảm tải cho hệ thống SCS cũng như tăng hiệu năng truy cập, vì cách User truy cập trực tiếp tới Cloud Server sẽ nhanh hơn việc chúng ta phải lấy nội dung Object từ Cloud Server về SCS, sau đó lại từ SCS trả nội dung Object về User.
+Khi nhận được lookup request, MCS sẽ lấy ra thông tin **Object\_Name** từ request, và tìm trong cơ sở dữ liệu **Object Metadata** nào tương ứng với **Object\_Name** này. Sau đó MCS sẽ lấy ra một **replicaID** trong số các **replicaID** của Object đó, và dựa vào thuật toán Lookup của Chord Protocol để tìm xem Cloud Node nào đang chứa replica tương ứng với replicaID này (replicaID's successor Node). Bước cuối cùng, MCS Server trả về cho User các thông tin cần thiết như: replicaID và thông tin định danh của Cloud  để User có thể kết nối trực tiếp tới Cloud Server để lấy nội dung của Data Object **x** về. Cơ chế tương tác trực tiếp giữa User và Cloud Server cho phép dữ liệu không cần phải đi qua hệ thống trung gian là MCS, qua đó giảm tải cho hệ thống MCS cũng như tăng hiệu năng truy cập, vì cách User truy cập trực tiếp tới Cloud Server sẽ nhanh hơn việc chúng ta phải lấy nội dung Object từ Cloud Server về MCS, sau đó lại từ MCS trả nội dung Object về User.
 
-**(Vấn đề- Hybrid Cloud ? - Cloud có thêm thuộc tính là private hay public, nếu public thì cho phép người dùng connect trực tiếp, còn nếu private thì cho đi qua SCS rồi SCS trả về ?)**
+**(Vấn đề- Hybrid Cloud ? - Cloud có thêm thuộc tính là private hay public, nếu public thì cho phép người dùng connect trực tiếp, còn nếu private thì cho đi qua MCS rồi MCS trả về ?)**
 
 Như vậy, chúng ta đã xây dựng quy trình xử lý cơ bản cho thao tác Lookup Data Object. Tuy nhiên, như chúng ta đã nói ở phần đầu, các thao tác trên Data Object phải đảm bảo về các tính chất của hệ thống phân tán như tính High-available, cân bằng tải và tính nhất quán của dữ liệu - data consistency. Trong thao tác Lookup Data Object, các tính chất trên biểu hiện cụ thể thông qua các kịch bản sau:
 
 **Thứ nhất**: Chúng ta xử lý ra sao khi một Replica của Data Object mà chúng ta muốn truy cập bị hỏng, do Cloud Node chứa Replica đó gặp sự cố?
 
-Ghi chú: Vấn đề kiểm tra trong các Cloud Node, có Cloud Node nào gặp sự cố hay không được SCS lập lịch để thực hiện (đánh dấu replica đó đang bị hỏng/ lập lịch để tạo ra 1 replica khác trên 1 cloud Node khác). Ví dụ cứ 1 phút kiểm tra lại toàn bộ các Cloud của User A, xem có cloud nào có vấn đề gì không,nếu có vấn đề cập nhật vào thông tin của Cloud đó. chứ không để tới khi Truy cập vào một Data Object nào đó mới thực hiện việc kiểm tra, vì cách này sẽ tạo ra quá nhiều request kiểm tra.
+Ghi chú: Vấn đề kiểm tra trong các Cloud Node, có Cloud Node nào gặp sự cố hay không được MCS lập lịch để thực hiện (đánh dấu replica đó đang bị hỏng/ lập lịch để tạo ra 1 replica khác trên 1 cloud Node khác). Ví dụ cứ 1 phút kiểm tra lại toàn bộ các Cloud của User A, xem có cloud nào có vấn đề gì không,nếu có vấn đề cập nhật vào thông tin của Cloud đó. chứ không để tới khi Truy cập vào một Data Object nào đó mới thực hiện việc kiểm tra, vì cách này sẽ tạo ra quá nhiều request kiểm tra.
 
 Giải pháp:
 
-- Để kiểm tra tình trạng các Cloud Node của một User, trên hệ thống SCS chúng ta cần tạo ra các tiến trình chạy ngầm, định kỳ kiểm tra tình trạng của các Cloud Node của các User. Tình trạng của các Cloud Node của một User sẽ được định kỳ cập nhật vào thông tin của User đó.
+- Để kiểm tra tình trạng các Cloud Node của một User, trên hệ thống MCS chúng ta cần tạo ra các tiến trình chạy ngầm, định kỳ kiểm tra tình trạng của các Cloud Node của các User. Tình trạng của các Cloud Node của một User sẽ được định kỳ cập nhật vào thông tin của User đó.
 
-- Khi lấy ra thông tin một replica của **x** để trả về cho người dùng, chúng ta sẽ truy cập vào thông tin của User để lấy ra tình trạng hiện tại của các Cloud nó. Nếu Cloud Node chứa replica đó đang có trình trạng xấu (bị hỏng/ ngắt kết nối,...), SCS cần trả về một Replica khác của **x** nằm ở Cloud Node có tình trạng tốt.
+- Khi lấy ra thông tin một replica của **x** để trả về cho người dùng, chúng ta sẽ truy cập vào thông tin của User để lấy ra tình trạng hiện tại của các Cloud nó. Nếu Cloud Node chứa replica đó đang có trình trạng xấu (bị hỏng/ ngắt kết nối,...), MCS cần trả về một Replica khác của **x** nằm ở Cloud Node có tình trạng tốt.
 
 **Note**: Giải pháp xử lý trường hợp Cloud bị hỏng /ngắt kết nối
 
@@ -199,18 +199,18 @@ Giải pháp 2:
 
 Giải pháp:
 
-- SCS theo dõi xem trong **k** phút gần đây nhất, một tài khoản người dùng - User đang có những Data Object nào đang được client truy cập vào. Thông tin về lưu lượng truy cập gần đây tới  Data Object **x** của một User trong hệ thống được gọi là **Data\_Object\_Connection\_Information** của **x**. SCS lưu trữ lại tất cả **Data\_Object\_Connection\_Information** gần đây vào trong một danh sách và lưu trữ vào thông tin của User đó.
+- MCS theo dõi xem trong **k** phút gần đây nhất, một tài khoản người dùng - User đang có những Data Object nào đang được client truy cập vào. Thông tin về lưu lượng truy cập gần đây tới  Data Object **x** của một User trong hệ thống được gọi là **Data\_Object\_Connection\_Information** của **x**. MCS lưu trữ lại tất cả **Data\_Object\_Connection\_Information** gần đây vào trong một danh sách và lưu trữ vào thông tin của User đó.
 
 - **Data\_Object\_Connection\_Information** của **x** là thông in cho biết **x** được bao nhiêu Client truy cập tới trong khoảng thời gian **k** phút gần đây, và ghi lại mỗi một replica của **x** đang phục vụ cho bao nhiêu connection ?
 
-- Dựa vào **Data\_Object\_Connection\_Information** của **x**, SCS sẽ sử dụng một trong các chiến lược lập lịch (scheduler) để lần lượt trả về cho request các replica khác nhau của x. Các chiến lược lập lịch có thể sử dụng ở đây là Round-Robin, least connection, kết hợp với thông tin của request (Ví dụ như địa điểm gửi request đang gần với replica nào nhất ?)
+- Dựa vào **Data\_Object\_Connection\_Information** của **x**, MCS sẽ sử dụng một trong các chiến lược lập lịch (scheduler) để lần lượt trả về cho request các replica khác nhau của x. Các chiến lược lập lịch có thể sử dụng ở đây là Round-Robin, least connection, kết hợp với thông tin của request (Ví dụ như địa điểm gửi request đang gần với replica nào nhất ?)
 
-**Thứ ba**: Không phải bất cứ lúc nào các bản sao của một Data Object trên các Cloud Server cũng đồng bộ với nhau:Khi người dùng cập nhật nội dung của Data Object **x**, sự không nhất quán dữ liệu giữa các bản sao của **x** sẽ xảy ra trong một khoảng thời gian. Lý do là vì theo cơ chế cập nhật Data Object mà SCS sử dụng mà chúng ta sẽ nói tới ở phần sau - **Read After Write**, thì tại thời điểm người dùng cập nhật nội dung Data Object, sẽ chỉ có một trong số các bản sao của **x** được cập nhật. Các bản sao khác của x sẽ được đồng bộ và cập nhật vào một thời điểm khác. Vậy quá trình Lookup **x** trong khoảng thời gian trước khi tất cả các bản sao của x được đồng bộ sẽ diễn ra như thế nào ?
+**Thứ ba**: Không phải bất cứ lúc nào các bản sao của một Data Object trên các Cloud Server cũng đồng bộ với nhau:Khi người dùng cập nhật nội dung của Data Object **x**, sự không nhất quán dữ liệu giữa các bản sao của **x** sẽ xảy ra trong một khoảng thời gian. Lý do là vì theo cơ chế cập nhật Data Object mà MCS sử dụng mà chúng ta sẽ nói tới ở phần sau - **Read After Write**, thì tại thời điểm người dùng cập nhật nội dung Data Object, sẽ chỉ có một trong số các bản sao của **x** được cập nhật. Các bản sao khác của x sẽ được đồng bộ và cập nhật vào một thời điểm khác. Vậy quá trình Lookup **x** trong khoảng thời gian trước khi tất cả các bản sao của x được đồng bộ sẽ diễn ra như thế nào ?
 
 Giải pháp:
 
 - Vấn đề Lookup ở đây có liên quan chặt chẽ tới cơ chế xử lý cập nhật Data Object **x**. Theo đó, khi người dùng thực hiện thao tác cập nhật Data Object **x** chúng ta cần lưu lại **các replica nào trong số các replica của x đã được cập nhật**, đồng thời đánh dấu **x** chưa được đồng bộ hóa. Hai thông tin: **x.is_synchronized = False** và **is\_synchronized** - thuộc tính của một replica xác định replica đó đã được cập nhật hay chưa đã được cập nhật sẽ được lưu vào **Object Metadata** của x.
-- Khi một Client thực hiện Lookup **x**, chúng ta phải truy cập vào Object Metadata của **x** để kiểm tra xem **x** đã được đồng bộ hay chưa bằng cách kiểm tra tham số **x.is_synchronized**. Nếu **x** chưa được đồng bộ, thì theo cơ chế của Read After Write, SCS sẽ trả về cho Client một trong số replica đã được cập nhật - replica tương ứng với **updated\_replicaID**.
+- Khi một Client thực hiện Lookup **x**, chúng ta phải truy cập vào Object Metadata của **x** để kiểm tra xem **x** đã được đồng bộ hay chưa bằng cách kiểm tra tham số **x.is_synchronized**. Nếu **x** chưa được đồng bộ, thì theo cơ chế của Read After Write, MCS sẽ trả về cho Client một trong số replica đã được cập nhật - replica tương ứng với **updated\_replicaID**.
 
 Như vậy, trong quá trình giải quyết các vấn đề gặp phải trong hệ thống, **Object metadata** của **x** đã mở rộng ra và chứa các thông tin sau:
 
@@ -227,22 +227,22 @@ Trong các phần tiếp theo, những đối tượng dữ liệu và các phư
 
 Như đã trình bày ở phần Lookup, quá trình Update Data Object của một User tuân theo nguyên tắc Read and Write: Cơ chế cơ bản của việc cập nhật nội dung cho Data Object **x** diễn ra như theo quy tắc Read After Write như sau:
 
-Tham số đầu vào của quá trình cập nhật Data Object **x** là tên của **x** - x.Object\_Name và nội dung mới mà **x** sẽ lưu trữ - x.New\_Content. Khi SCS nhận được yêu cầu cập nhật từ người dùng, Hệ thống sẽ sử dụng **x.Object_Name** để lấy ra Object Metadata của **x**, sau đó cập nhật **x.New\_Content** vào một trong các replica của **x**. Sau khi cập nhật xong nội dung cho replica được chọn, chúng ta thay đổi trạng thái của x sang thành chưa được đồng bộ - **x.is\_synchronized = False** và lưu lại ReplicaID của replica mà chúng ta đã cập nhật lên phiên bản mới nhất vào **updated\_ReplicaID**. Đồng thời chúng ta cập nhật trạng thái cho các replica, replica đã được cập nhật sẽ được thiết lập **replica.is\_synchronized = True**, các replica chưa được đồng bộ còn lại được thiết lập **replica.is\_synchronized = False** .
+Tham số đầu vào của quá trình cập nhật Data Object **x** là tên của **x** - x.Object\_Name và nội dung mới mà **x** sẽ lưu trữ - x.New\_Content. Khi MCS nhận được yêu cầu cập nhật từ người dùng, Hệ thống sẽ sử dụng **x.Object_Name** để lấy ra Object Metadata của **x**, sau đó cập nhật **x.New\_Content** vào một trong các replica của **x**. Sau khi cập nhật xong nội dung cho replica được chọn, chúng ta thay đổi trạng thái của x sang thành chưa được đồng bộ - **x.is\_synchronized = False** và lưu lại ReplicaID của replica mà chúng ta đã cập nhật lên phiên bản mới nhất vào **updated\_ReplicaID**. Đồng thời chúng ta cập nhật trạng thái cho các replica, replica đã được cập nhật sẽ được thiết lập **replica.is\_synchronized = True**, các replica chưa được đồng bộ còn lại được thiết lập **replica.is\_synchronized = False** .
 
 Các vấn đề cần giải quyết trong quá trình cập nhật Data Object x là:
 
 **Thứ nhất**: Như ta đã nói, chiến lược của chúng ta là tạo ra một **Deamon Process** định kỳ thực thi công việc đồng bộ các replica cho các Data Object bị cập nhật nội dung với chu kỳ **k** phút. Để giúp **Deamon Process** này hoạt động, chúng ta sẽ lưu lại thông tin về các Data Object bị cập nhật nội dung vào một danh sách lưu trong thông tin của User sở hữu Object đó. Do trong **k** phút, số lượng Object mà hệ thống có thể đồng bộ được là có giới hạn, do đó độ dài danh sách các Data Object bị cập nhật cũng cần phải có giới hạn. Điều này có nghiã là nếu số lượng yêu cầu cập nhật của người dùng đưa vào hệ thống là quá nhiều và vượt quá số lựng Data Object có thể đồng bộ trong khoảng thời gian trên, chúng ta sẽ từ chối yêu cầu cập nhật của người dùng, và thông báo cho người dùng tạm ngừng việc cập nhật nội dung các Data Object cho tới khi các Data Object nằm trong danh sách chờ đồng bộ được đồng bộ hóa xong.
 
-Điều này có nghĩa là trước khi thực hiện việc cập nhật nội dung cho Data Object, SCS sẽ kiểm tra xem danh sách chờ đồng bộ của User đã đầy chưa. Nếu danh sách chờ đồng bộ đã đầy, chúng ta sẽ từ chối yêu cầu cập nhật của User và trả về lý do từ chối.
+Điều này có nghĩa là trước khi thực hiện việc cập nhật nội dung cho Data Object, MCS sẽ kiểm tra xem danh sách chờ đồng bộ của User đã đầy chưa. Nếu danh sách chờ đồng bộ đã đầy, chúng ta sẽ từ chối yêu cầu cập nhật của User và trả về lý do từ chối.
 
 **Thứ hai**: Chúng ta cần xác định cơ chế đồng bộ hóa. Cứ sau mỗi **k** phút, Deamon Process thực hiện nhiệm vụ đồng bộ dữ liệu hoạt động. Qúa trình đồng bộ sẽ diễn ra như sau:
 
 - **Deamon Process** sẽ lần lượt lấy ra từ danh sách chờ đồng bộ hóa thông tin về Data Object **x** chưa được đồng bộ. Thông tin về một Data Object chưa được đồng bộ bao gồm tên của Data Object, replicaID của Replica đã được đồng bộ.
-- **Deamon Process** sử dụng tên của Data Object lấy ra Object Meatadata tương ứng với Data Object cần đồng bộ, từ đó lấy ra danh sách các replica chưa được đồng bộ của Data Object đó, sau đó **Deamon Proccess** thực hiện việc lấy nội dung mới nhất của Data Object từ replica đã được đồng bộ lên SCS Server, sau đó nội dung lấy về SCS được thực hiện để đồng bộ cho các replica chưa được cập nhật nội dung mới nhất, các replica đã được cập nhật xong được đặt lại thuộc tính **repica.is\_synchronized = True**.
+- **Deamon Process** sử dụng tên của Data Object lấy ra Object Meatadata tương ứng với Data Object cần đồng bộ, từ đó lấy ra danh sách các replica chưa được đồng bộ của Data Object đó, sau đó **Deamon Proccess** thực hiện việc lấy nội dung mới nhất của Data Object từ replica đã được đồng bộ lên MCS Server, sau đó nội dung lấy về MCS được thực hiện để đồng bộ cho các replica chưa được cập nhật nội dung mới nhất, các replica đã được cập nhật xong được đặt lại thuộc tính **repica.is\_synchronized = True**.
 - Sau khi các replica còn lại đã được cập nhật nội dung mới nhất, **Deamon Process** thay đổi trạng thái của Data Object thành đã được đồng bộ: **x.is\_synchronized = True**
 - Sau khi đồng bộ xong cho một Data Object có trong danh sách chờ đồng bộ hóa, **Deamon Process** loại bỏ Data Object này khỏi danh sách chờ, và lấy ra Data Object tiếp theo để thực hiện việc đồng bộ.
 
-**Thứ ba**: Trong trường hợp Data Object **x** vừa mới cập nhật và chưa được thực hiện việc đồng bộ thì đã có thêm một yêu cầu cập nhật nhật nội dung **Data Object x** đến hệ thống SCS. Trong trường hợp này, chúng ta có ba lựa chọn:
+**Thứ ba**: Trong trường hợp Data Object **x** vừa mới cập nhật và chưa được thực hiện việc đồng bộ thì đã có thêm một yêu cầu cập nhật nhật nội dung **Data Object x** đến hệ thống MCS. Trong trường hợp này, chúng ta có ba lựa chọn:
 
 - Hoặc là chúng ta sẽ từ chối yêu cầu cập nhật thứ 2, do **x** vẫn chưa được đồng bộ
 - Hoặc chúng ta sẽ cho phép cập nhật nội dung ở yêu cầu thứ 2 lên lên một replica khác,
@@ -260,7 +260,7 @@ Cơ chế xóa một Data Object trên hệ thống: Đưa thông tin của Data
     - Xóa các bản sao của Data Object đó.
     - Xóa Object Metadata của Data Object đó sau khi đã xóa mọi Object Metadata.
 
-**Note**: Trong qúa trình lookup, SCS cần kiểm tra xem Data Object đã bị xóa hay chưa bằng cách đọc giá trị của thuộc tính **is\_deleted**. Nếu Data Object đã bị xóa, hệ thống thông báo lại cho người dùng.
+**Note**: Trong qúa trình lookup, MCS cần kiểm tra xem Data Object đã bị xóa hay chưa bằng cách đọc giá trị của thuộc tính **is\_deleted**. Nếu Data Object đã bị xóa, hệ thống thông báo lại cho người dùng.
 
 #### 3.5.5 Update Data Object Name Process
 
@@ -277,13 +277,13 @@ Giải pháp đề xuất:
 - Tên cơ sở để tạo ra replicaID là tên Data Object lúc khởi tạo + **time\_stamp** là thời gian Data Object đó được tạo ra.
 - replicaID được tạo ra bằng một cách khác - không sử dụng hàm hashing để tạo ra, có thể dùng giải pháp như **auto-increment** ?
 
-### 3.6 Process Cloud Node Join and Leave Events in SCS System
+### 3.6 Process Cloud Node Join and Leave Events in MCS System
 
-SCS dựa vào cơ chế Node Join and Leave của Chord Protocol để tạo ra cơ chế xử lý các sự kiện người dùng thêm một Cloud mới vào hệ thống và sự kiện Người dùng loại một Cloud khỏi hệ thống.
+MCS dựa vào cơ chế Node Join and Leave của Chord Protocol để tạo ra cơ chế xử lý các sự kiện người dùng thêm một Cloud mới vào hệ thống và sự kiện Người dùng loại một Cloud khỏi hệ thống.
 
 #### 3.6.1 Process Cloud Node Join Event
 
-Quá trình xử lý sự kiện thêm một Cloud Node vào hệ thống được SCS thực hiện khi hệ thống nhận được yêu cầu của người dùng, với tham số đầu vào là thông tin định danh của Cloud Node. Các bước xử lý được thực hiện như sau:
+Quá trình xử lý sự kiện thêm một Cloud Node vào hệ thống được MCS thực hiện khi hệ thống nhận được yêu cầu của người dùng, với tham số đầu vào là thông tin định danh của Cloud Node. Các bước xử lý được thực hiện như sau:
 
 - Kiểm tra thông tin định danh của Cloud Node
 - Thêm Cloud Node vào Cloud Ring của User theo các nguyên tắc của Chrord: Cập nhật Succesor Node, Predecessor Node, Ring Table cho các Node
@@ -294,7 +294,7 @@ Trong khoảng thời gian di chuyển các Data Object, cần ngừng lại m�
 
 #### 3.6.2 Process Cloud Node Leave Event
 
-Quá trình xử lý sự kiện loại bỏ một Cloud Node vào hệ thống được SCS thực hiện khi hệ thống nhận được yêu cầu của người dùng, với tham số đầu vào là thông tin định danh của Cloud Node. Các bước xử lý được thực hiện như sau:
+Quá trình xử lý sự kiện loại bỏ một Cloud Node vào hệ thống được MCS thực hiện khi hệ thống nhận được yêu cầu của người dùng, với tham số đầu vào là thông tin định danh của Cloud Node. Các bước xử lý được thực hiện như sau:
 
 - Đánh dấu trạng thái của Cloud Node sắp bị loại bỏ là **IS\_PREPARING\_TO\_LEAVE**
 - Khởi chạy một Deamon Process thực hiện công việc di chuyển các Data Object nằm sai vị trí trong Cloud Ring mới từ Cloud Node bị loại bỏ sang Successor Node của nó.
@@ -303,7 +303,7 @@ Quá trình xử lý sự kiện loại bỏ một Cloud Node vào hệ thống 
 
 Trong quá trình thực hiện di chuyển dữ liệu giữa Cloud Node sắp bị loại bỏ sang Successor Node, mọi truy cập tới Cloud Node bị loại bỏ bị ngừng lại, thực hiện chuyển hướng sang các replica nằm ở các Cloud Node khác.
 
-### 3.7 Manage and Process User Information in SCS System
+### 3.7 Manage and Process User Information in MCS System
 
 Sau khi thiết kế các cơ chế để quản lý đối tượng Data Object và Các Cloud Node, bây giờ chúng ta cần xây dựng các cơ chế quản lý những người sử dụng hệ thống - User.
 
@@ -353,9 +353,9 @@ def CreateAccount(User_Authentication, Cloud_Information_List):
 
 Trong trường hợp có một Cloud Node bị lỗi, các dữ liệu thuộc Cloud đó có thể bị mất ? Có cần lưu trữ 1 backup lưu trữ Cloud Node đó đang chứa các Data Object nào không ?
 
-### 3.9 Process Folder Object in SCS System
+### 3.9 Process Folder Object in MCS System
 
-Kiểu lưu trữ được sử dụng trong hệ thống SCS là Object Storage. Tuy nhiên, do thói quen của người sử dụng, chúng ta cần cung cấp cho người dùng các Folder, để cho phép người dùng dễ dàng quản lý dữ liệu của họ theo cấu trúc cây thư mục quen thuộc.
+Kiểu lưu trữ được sử dụng trong hệ thống MCS là Object Storage. Tuy nhiên, do thói quen của người sử dụng, chúng ta cần cung cấp cho người dùng các Folder, để cho phép người dùng dễ dàng quản lý dữ liệu của họ theo cấu trúc cây thư mục quen thuộc.
 
 Để tạo ra các Folder, chúng ta sẽ lưu các Folder có trong kho lưu trữ của người dùng dưới dạng một Data Object. Data Object này sẽ có nội dung là các thông tin về các File, Folder con mà Folder này chứa - File/Sub Folder Name và đường dẫn tới Object Metadata của các File/ Sub Folder đó.
 
@@ -397,7 +397,7 @@ Quá trình xử lý xóa một Folder được thực hiện bằng cách xóa 
 
 ## 4. Thiết kế Biểu đồ lớp - Class Diagram của hệ thống
 
-Dựa trên những thiết kế mà chúng ta đã tạo ra để xây dựng các cơ chế xử lý cho hệ thống SCS, chúng ta sẽ tiến hành thiết kế các đối tượng trong hệ thống.
+Dựa trên những thiết kế mà chúng ta đã tạo ra để xây dựng các cơ chế xử lý cho hệ thống MCS, chúng ta sẽ tiến hành thiết kế các đối tượng trong hệ thống.
 
 ![class_diagram](./images/class_diagram.png)
 
@@ -407,7 +407,7 @@ Vấn đề: Các list:
 - Is\_Synchronizing\_Data\_Object\_List: Danh sách các Data Object đang được cập nhật.
 - Wait\_Delete\_Object\_List: Danh sách các Data Object đang được thực thi quá trình xóa.
 
- trong đối tượng User là các tài nguyên chia sẻ chung giữa các SCS System (Trong kịch bản sử dụng multi SCS System)
+ trong đối tượng User là các tài nguyên chia sẻ chung giữa các MCS System (Trong kịch bản sử dụng multi MCS System)
 
  Chúng ta có phải xử lý trường hợp nhiều Daemon process cùng truy cập và xử lý chung một Tài nguyên chia sẻ chung kia không (Lok, sharemaphore,...)
 
