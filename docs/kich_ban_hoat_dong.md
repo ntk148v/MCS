@@ -12,13 +12,23 @@ Hệ thống Multi Cloud Storage (MCS) là một hệ thống cho phép kết h�
 
 Bên cạnh những tính năng trên, hệ thống MCS đảm bảo các tương tác với dữ liệu của người dùng như lưu trữ, truy cập thay đổi dữ liệu... được thực hiện một cách tối ưu - optimize nhất.
 
-## 2. Mục tiêu của hệ thống
+## 2. Mục tiêu và giới hạn phạm vi của hệ thống
+
+## 2.1 Mục tiêu của hệ thống
 
 Hệ thống MCS được xây dựng để thực hiện hai mục tiêu chính sau:
 
 - Quản lý DataObject: Cho phép người dùng sử dụng hệ thống để lưu trữ và quản lý các DataObject bằng các thao tác như lấy về Object Data, tạo mới, di chuyển, cập nhật, xóa bỏ DataObject. Trong trường hợp Upload, cho người dùng lựa chọn số lượng bản sao của một DataObject, cho phép người dùng lựa chọn một trong 2 chế độ: hoặc người dùng tự xác định Cloud nào sẽ lưu trữ bản sao của DataObject, hoặc hệ thống sẽ tự động lựa chọn các Cloud phù hợp.
 
 - Quản lý CloudNode: Cho phép người dùng cấu hình danh sách các CloudNode mà người dùng có trên hệ thống, cho phép thêm mới và gỡ bỏ các CloudNode khỏi hệ thống. Khi người dùng thực hiện thao tác gỡ bỏ CloudNode khỏi hệ thống, hệ thống cho phép người dùng lựa chọn xem có giữ lại các DataObject đang lưu trữ trên CloudNode đó ( di chuyển các DataObject nằm trên CloudNode bị gỡ bỏ sang các CloudNode còn lại của hệ thống) hay không. Bên cạnh đó, hệ thống cho phép người dùng kiểm tra trạng thái của các CloudNode.
+
+## 2.2 Giới hạn phạm vi của hệ thống
+
+Hệ thống được xác định giới hạn phạm vi làm việc như sau:
+
+- Số người dùng hệ thống ở mức độ vừa phải
+- Kích thước tệp tin trong hệ thống không quá lớn
+- Dung lượng các Cloud Server mà người dùng có là đồng đều với nhau.
 
 ## 3. Thiết kế biểu đồ lớp của hệ thống
 
@@ -122,7 +132,7 @@ Hiển thị trang thông tin chi tiết về các CloudNode đang có trong tà
         - Nếu là mặc định, hệ thống kiểm tra xem dung lượng lưu trữ ở các CloudNode nào trong số các CloudNode còn đủ, hoặc hash replica_name, hoặc round\_robin để chọn ra các CloudNode phù hợp để lưu trữ các Replica của DataObject mới. (Cái này em xin bàn thêm với thầy và các anh).
     1. Trong trường hợp số lượng CloudNode phù hợp để lưu trữ DataObject mới nhỏ hơn số lượng replica người dùng muốn tạo, hệ thống báo lỗi tới người dùng.
     1. Sau khi chọn được các CloudNode phù hợp, hệ thống tạo ra các replica.id cho các Replica của DataObject mới. Chiến lược tạo ra các replica.id có thể là Hash Replica Name, hoặc sử dụng biến **auto\_increment\_replica.id** trên các CloudNode.
-1. Hệ thống sẽ tạo ra các replica sau khi đã có replica.id cho từng replica, sau đó một replica **x** trong số các replica sẽ được lưu lại và đánh dấu **updated**, các replica còn lại sẽ được đánh dấu **not\_updated** (Đánh dấu bằng biến boolean),trong các **Replica**. Sau khi replica **x** đã hoàn tất quá trình lưu dữ liệu của DataObject lên CloudNode,hệ thống tạo ObjectMetadata cho DataObject mới và chuyển trạng thái của DataObject sang **CREATING**, sau đó hệ thống thực hiện 3 công việc sau:
+1. Hệ thống sẽ tạo ra các replica sau khi đã có replica.id cho từng replica, sau đó một replica **x** trong số các replica sẽ được lưu lại và đánh dấu **updated**, các replica còn lại sẽ được đánh dấu **not\_updated** (Đánh dấu bằng biến boolean),trong các **Replica**. Sau khi replica **x** đã hoàn tất quá trình lưu dữ liệu của DataObject lên CloudNode,hệ thống tạo ObjectMetadata cho DataObject mới và chuyển trạng thái của DataObject sang **CREATING**, sau đó hệ thống thực hiện lần lượt 3 công việc sau:
         1. Lưu Object Metadata cũng như các Replica đã tạo ra vào Database.
         1. Thêm ObjectMetadata của Data Object mới tạo vào danh sách **creating_objects** trong dữ liệu của **User**
         1. Đẩy một message chứa thông tin về DataObject mới tạo lên **Create\_Data\_Object\_Queue** trên RabbitMQ Server
@@ -130,8 +140,6 @@ Hiển thị trang thông tin chi tiết về các CloudNode đang có trong tà
 1. Định kỳ sau một khoảng thời gian, tạo một **Create\_Data\_Object Daemon Process**, Daemon Process này lấy tin nhắn trong **Create\_Data\_Object\_Queue**, thực hiện việc lấy nội dung của DataObject tương ứng, sau đó lưu nội dung của DataObject này lên các replica còn lại mà chưa được tạo lên các CloudNode tương ứng, sau đó thực hiện chuyển trạng thái của DataObject sang trạng thái **READY** và xóa phần tử tương ứng với DataObject này trong danh sách **creating_objects**. Kịch bản thực hiện bước này được mô tả như sau:
 
 ![create_data_object_process.png](./images/create_data_object.png)
-
-**(Thầy và các anh xem xử lý như thế này có được không ?)**
 
 #### 4.4.3 Output
 
@@ -164,7 +172,7 @@ Hệ thống thông báo kết quả tạo DataObject mới cho người dùng. 
 - Nếu thành công, client dựa vào thông tin mà client gửi về (Cloud Config và replica.id), kết nối trực tiếp tới CloudNode chứa replica của DataObject và lấy về nội dung của DataObject, sau đó hiển thị nội dung lên màn hình hoặc tải xuống nội dung.
 - Nếu thất bại, thông báo lỗi tới người dùng.
 
-**Xin ý kiến: Trong lúc quét DataObject/Object Metadata, nếu phát hiện**
+**Xin ý kiến: Trong lúc quét DataObject/Object Metadata, nếu phát hiện các Data Object có status bất thường thì có đẩy lên các queue xử lý hay không (tạo queue mới để xử lý corrupted file?)**
 
 ### 4.7 Tải xuống một thư mục (khác với xem nội dung thư mục - ở đây là lấy toàn bộ nội dung thư mục về)
 
@@ -187,24 +195,39 @@ Kịch bản: Người dùng truy cập vào màn hình hệ thống, chọn m�
     - Nếu status = **UPDATING**, hệ thống thông báo cho người dùng DataObject đang được cập nhật, và hỏi người dùng xem muốn tạo một DataObject mới không?
     - Nếu status nằm trong các trường hợp còn lại, xử lý báo lỗi cho người dùng, ngừng tiến trình cập nhật.
 1. Hệ thống kiểm tra số lượng DataObject hiện tại đang chờ cập nhật, nếu số lượng này đã đạt tới giới hạn, thông báo lỗi cho người dùng. (1 vấn đề cần thảo luận : có cần kiểm tra dung lượng của DataObject mới? ) - chỉnh sửa lại Document và biểu đồ lớp, thêm thuộc tính số lượng DataObject đang chờ Update?
-1. Nếu DataObject cần cập nhật thỏa mãn các điều kiện cập nhật trên, chúng ta chuyển status của DataObject sang **PRE_UPDATE** rồi đẩy nội dung mới của DataObject xuống một trong các Replica của DataObject. Sau khi đẩy xuống hoàn tất, chuyển status của DataObject sang **UPDATING**, sau đó chuyển status của các replica còn lại chưa được cập nhật của Object sang **NOT\_UPDATED**. Sau đó hệ thống gửi message chứa thông tin về DataObject lên **Is\_Synchronizing\_Content\_Queue** trên RabbitMQ Server
+1. Nếu DataObject cần cập nhật thỏa mãn các điều kiện cập nhật trên, chúng ta chuyển status của DataObject sang **PRE_UPDATE** rồi đẩy nội dung mới của DataObject xuống một trong các Replica của DataObject. Sau khi đẩy xuống hoàn tất, chuyển status của DataObject sang **UPDATING**, sau đó chuyển status của các replica còn lại chưa được cập nhật của Object sang **NOT\_UPDATED**. Sau đó hệ thống lần lượt thực hiện 2 công việc sau:
+    1. Thêm ObjectMetadata của Data Object mới tạo vào danh sách **updating_objects** trong dữ liệu của **User**.
+    1. Gửi message chứa thông tin về DataObject lên **Is\_Synchronizing\_Content\_Queue** trên RabbitMQ Server.
 
-1. Định kỳ sau một khoảng thời gian, tạo một **Update\_Data\_Object Daemon Process**, Daemon Process này lấy tin nhắn trong **Is\_Synchronizing\_Content\_Queue**, sau đó thực hiện việc lấy nội dung của DataObject tương ứng từ một trong các replica có status là UPDATED, sau đó cập nhật nội dung của DataObject này lên các replica đang có status là **NOT\_UPDATED** trên CloudNode tương ứng rồi chuyển status các Replica thực hiện cập nhật xong sang **UPDATED**, sau khi tất cả mọi Replica đã thực hiện cập nhật xong, thực hiện chuyển trạng thái của DataObject sang trạng thái **READY**. Kịch bản thực hiện bước này được mô tả như sau:
+1. Định kỳ sau một khoảng thời gian, tạo một **Update\_Data\_Object Daemon Process**, Daemon Process này lấy tin nhắn trong **Is\_Synchronizing\_Content\_Queue**, sau đó thực hiện việc lấy nội dung của DataObject tương ứng từ một trong các replica có status là UPDATED, sau đó cập nhật nội dung của DataObject này lên các replica đang có status là **NOT\_UPDATED** trên CloudNode tương ứng rồi chuyển status các Replica thực hiện cập nhật xong sang **UPDATED**, sau khi tất cả mọi Replica đã thực hiện cập nhật xong, thực hiện chuyển trạng thái của DataObject sang trạng thái **READY** và xóa ObjectMetadata tương ứng với Object trong danh sách **updating_objects** đi . Kịch bản thực hiện bước này được mô tả như sau:
 
 ![update_data_object_process.png](./images/update_data_object.png)
 
-Lý do mà ở bước 1 phải có 2 trạng thái **PRE\_UPDATE** và **UPDATING**, đó là do ở trạng thái **PRE\_UPDATE**, hệ thống vẫn chưa cập nhật nội dung mới nhất của DataObject lên bất cứ một replica nào, nên DataObject bị chuyển sang **PRE\_UPDATE** để từ chối truy cập trong thời gian một replica trong hệ thống cập nhật nội dung mới nhất. Sau khi đã có ít nhất một replica đã cập nhật lên nội dung mới nhất, hệ thống mới chuyển trạng thái của DataObject sang **UPDATING**, tức là cho phép truy cập trở lại.
+(Lý do mà ở bước 1 phải có 2 trạng thái **PRE\_UPDATE** và **UPDATING**, đó là do ở trạng thái **PRE\_UPDATE**, hệ thống vẫn chưa cập nhật nội dung mới nhất của DataObject lên bất cứ một replica nào, nên DataObject bị chuyển sang **PRE\_UPDATE** để từ chối truy cập trong thời gian một replica trong hệ thống cập nhật nội dung mới nhất. Sau khi đã có ít nhất một replica đã cập nhật lên nội dung mới nhất, hệ thống mới chuyển trạng thái của DataObject sang **UPDATING**, tức là cho phép truy cập trở lại.) (Sau này phần giải thích này sẽ chuyển qua tài liệu thiết kế hệ thống).
 
-### 4.9 Xóa một DataObject khỏi hệ thống
+#### 4.8.3 Output
+
+Thông báo với người dùng kết quả update file (đang update được bao nhiêu %, đã truy cập được hay chưa ?...)
+
+### 4.9 Xóa một Data Object khỏi hệ thống
+
+Kịch bản: Trên giao diện hệ thống, người dùng chọn một file và lựa chọn chức năng **Xóa file...**
 
 #### 4.9.1 Input
 
-- File được lựa chọn sẽ xóa.
+Tên tuyệt đối của Data Object mà người dùng muốn xóa bỏ.
 
 #### 4.9.2 Các bước thực hiện
 
-1. Từ id của DataObject (đại diện cho file được chọn), lấy được danh sách các Replica.
-1. Từ danh sách các Replica, id của Replica, và CloudRing lookup được các CloudNode chứa Replica đó. Sau đó tiến hành gửi Request DELETE xuống. Tuy nhiên vẫn giữ lại 1 Replica mang tính chất backup, nếu người dùng muốn thay đổi quyết định sau này, Replica này sẽ được xóa sau 30 ngày.
+1. Hệ thống lấy object.id của Data Object mà người dùng muốn xóa bằng cách hash tên tuyệt đối, sau đó lấy ra Object Metadata của Data Object đó.
+1. Hệ thống chuyển status của Data Object sang **DELETING** rồi chuyển status của một replica trong số các replica của Data Object sang trạng thái **RESERVED\_RESTORE**. Sau đó hệ thống lần lượt thực hiện 2 công việc sau:
+    1. Thêm ObjectMetadata của Data Object mới tạo vào danh sách **deleting_objects** trong dữ liệu của **User**.
+    1. Gửi message chứa thông tin về DataObject lên **Is\_Deleting\_Queue** trên RabbitMQ Server.
+1. Cập nhật thông tin parent folder của Data Object vừa bị xóa
+1. Định kỳ sau một khoảng thời gian, hệ thống sẽ tạo ra tạo một **Delete\_Data\_Object Daemon Process**, Daemon Process này lấy tin nhắn trong **Is\_Deleting\_Queue**, sau đó thực hiện việc xóa bỏ các Replica tương ứng với Data Object trong tin nhắn này không có status là **RESERVED\_RESTORE** trên các Cloud Server tương ứng đi. Sau khi Daemon Process xóa xong các Replica của Data Object trên các Cloud Server và chỉ để lại duy nhất replica có status **RESERVED\_RESTORE** làm nhiệm vụ lưu trữ replica trong trường hợp người dùng muốn phục hồi data object, Daemon Process sẽ thực hiện việc thay đổi status của Data Object từ **DELETING** sang **DELETED**, đồng thời thêm Object Metadata của Object vào danh sách **deleted objects** trong thông tin của User.
+1. Định kỳ x ngày, một Daemon Process được tạo ra để kiểm tra các deleted objects xem có objects nào đã quá thời gian 30 ngày từ khi xóa chưa. Nếu đã quá hạn 30 ngày, Deamon Process này thực hiện việc xóa vĩnh viễn Data Object bằng cách xóa nốt replica cuối cùng của Object này và xóa Object Metadata, qua đó xóa tất cả mọi thông tin về Object này khỏi hệ thống.
+
+**Thảo luận: Có giữ lại tất cả các replica khi xóa Data Objects không, hay chỉ giữ lại một replica?**
 
 #### 4.9.3 Output
 
@@ -244,7 +267,57 @@ Trang thái của CloudNode.
 
 ### 4.12 Thêm mới CloudNode vào CloudRing
 
+**Kịch bản sử dụng:** Người dùng muốn thêm một Cloud Server mới vào hệ thống thông qua chức năng: **Thêm Cloud Server...**
+
+#### 4.12.1 Input
+
+**CloudConfig** - Thông tin về Cloud Server mà người dùng muốn thêm vào tài khoản. **CloudConfig** chứa các thông tin sau:
+
+- type - Loại CloudNode mà người dùng muốn thêm vào hệ thống, thuộc một trong các loại sau:
+    - OpenStack Swift
+    - Amazone S3
+- authentication: Thông tin xác thực cho CloudNode. Load lên từ file cấu hình.
+- ip_address: địa chỉ ip của CloudServer, dựa theo endpoint trong file cấu hình.
+
+#### 4.12.2 Các bước xử lý
+
+1. Tạo CloudID cho Cloud Server mới thêm.
+1. Thiết lập CloudRing, thêm Cloud mới tạo vào Cloud Ring theo Chord Protocol. Cập nhật bảng định tuyến cho các Node trong Cloud Ring và cập nhật thông tin định tuyến cho Predecessor Node và Successor Node của node mới được thêm vào.
+1. Quét danh sách các Replica hiện có trên Successor Node, kiểm tra xem các Replica nào cần phải di chuyển theo Chord Protocol.
+1. Chuyển status của Cloud Node mới thêm và Successor Node của nó sang trạng thái **IS\_TRANSFERING\_DATA**. Tạo ra một **Move Data Daemon Process** di chuyển các Replica của các Data Object sai vị trí sang Cloud Node mới.
+1. Sau khi di chuyển dữ liệu xong, chuyển lại trạng thái cho Cloud Node mới và Successor Node sang **READY**
+1. Các sự cố có thể xảy ra khi thực hiện Di chuyển:
+    - Một số Replica sai vị trí không thể di chuyển qua Cloud Server mới vì Cloud Server mới đã bị đầy:
+        1. Đánh dấu các Replica này ở trạng thái **IS\_MOVING**
+        1. HashID lại các Replica này và di chuyển chúng sang các Cloud Server khác
+        1. Chuyển lại status của các Replia sau khi di chuyển hoàn tất sang **READY**
+
 ### 4.13 Loại bỏ CloudNode khỏi CloudRing
+
+Kịch bản sử dụng: Người dùng muốn gỡ bỏ một Cloud Server khỏi hệ thống.
+
+#### 4.13.1 Input
+
+- CloudID của Cloud Server mà người dùng muốn xóa bỏ.
+
+#### 4.13.2 Các bước xử lý
+
+1. Chuyển Status của Cloud Server chuẩn bị xóa sang **IS\_LEAVING**.
+1. Tạo một Process Daemon thực hiện công việc sau:
+    1. Chuyển các Replica mà Cloud Server này đang chứa sang Successor Node của nó.
+    1. Sau khi di chuyển các Replica xong, cập nhật lại thông tin định tuyến của Predecessor Node và Successor Node, cập nhật lại bảng định tuyến cho các Node khác trên Ring theo Chord Protocol.
+    1. Xóa bỏ Thông tin về Cloud Server này trên khỏi hệ thống.
+
+- Các sự cố có thể xảy ra:
+    - Successor Node không đủ dụng lượng để lưu trữ các Replica của Cloud Server chuẩn bị xóa:
+        - Tạo lại cho Replica một ReplicaID khác
+        - Chuyển Replica sang lưu trữ tại một Node khác trong hệ thống.
+    - Người dùng muốn gỡ bỏ đồng thời nhiều Cloud một lúc ?
+
+#### 4.13.3 Output
+
+- Thông báo cho người dùng Cloud Server mà người dùng muốn xóa đang thực thi quá trình xóa
+
 
 ### 4.14 Xóa folder
 
@@ -264,7 +337,7 @@ Folder được lựa chọn sẽ xóa
     - creating_objects
     - recovering\_failed\_replica_object
 1. Đề xuất cơ chế sinh ID mới (thay vì sử dụng phương pháp của Chord là Hash Name tạo ID) để phù hợp với yêu cầu của hệ thống, vì trong yêu cầu mới, hệ thống sẽ chọn các Cloud phù hợp => có lựa chọn chứ không còn là sự lựa chọn ngẫu nhiên trong Chord nữa. Thậm chí nếu cảm thấy Chord không phù hợp => sử dụng phương pháp khác thay thế Chord.
-
+1. Việc cho người dùng chọn Cloud nào sẽ lưu trữ dữ liệu phá hỏng tính chất tự nhiên của Chord, đó là dữ liệu có thể di chuyển qua lại giữa các Cloud trong hệ thống => Nếu dữ liệu di chuyển thì vị trí của Data Object sẽ không còn nằm ở Cloud Ban đầu người dùng định sẵn nữa. Để đáp ứng được nhu cầu của người dùng, chỉ có cách là sử dụng mô hình Multi Ring của thầy
 
 <!--## 7. Kịch bản Update file.
 
