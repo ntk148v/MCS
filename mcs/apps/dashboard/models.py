@@ -25,3 +25,13 @@ class CloudNode(models.Model):
     ring = models.ForeignKey(CloudRing, on_delete=models.CASCADE)
 
     USERNAME_FIELD = 'identifier'
+
+
+class ObjectData(models.Model):
+
+    class Meta:
+        db_table = 'objectdata'
+        app_label = 'dashboard'
+
+    data = models.FileField(name='data')
+    last_modified = models.DateTimeField(auto_now_add=True)

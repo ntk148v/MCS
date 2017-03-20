@@ -1,0 +1,35 @@
+{% extends 'dashboard/base.html' %}
+{% block brand %}
+<a class="navbar-brand" href="#">File Management</a>
+{% endblock %}
+{% block main %}
+<!-- Inner Style, to solve modal proble -->
+<style type="text/css">
+    body.modal-open div.modal-backdrop { 
+        z-index: 0; 
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-12">
+    	<div class="card">
+    		<div class="header">
+                <h4 class="title">File MANAGEMENT</h4>
+            </div>
+            <div class="content">
+            	<button type="button" class="btn btn-default js-file-upload" data-url="{% url 'file_upload' %}">
+            		<i class="ti-upload"></i>
+            	</button>
+            </div>
+    	</div>
+    </div>
+</div>
+<!-- Show/Hide Modal popup -->
+<div class="modal fade" id="modal-file">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+      </div>
+    </div>
+</div>
+{% endblock %}
