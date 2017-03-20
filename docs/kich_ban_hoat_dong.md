@@ -1,7 +1,6 @@
 # Phân tích yêu cầu và thiết kế chức năng hệ thống Multi Cloud Storage (MCS)
 
-Table of Contents
-=================
+## **Table of Contents**
 
    * [Phân tích yêu cầu và thiết kế chức năng hệ thống Multi Cloud Storage (MCS)](#phân-tích-yêu-cầu-và-thiết-kế-chức-năng-hệ-thống-multi-cloud-storage-mcs)
       * [1. Giới thiệu](#1-giới-thiệu)
@@ -51,7 +50,6 @@ Table of Contents
             * [4.14.1 Input](#4141-input)
             * [4.14 Các bước thực hiện](#414-các-bước-thực-hiện)
       * [Các công việc cần thực hiện](#các-công-việc-cần-thực-hiện)
-
 
 ## 1. Giới thiệu
 
@@ -114,7 +112,7 @@ Thông tin xác thực của tài khoản User.
 
 #### 4.1.3 Output
 
-Kết quả tạo tài khoản. Thành công hay thất bại.
+Thông báo cho người dùng kết quả tạo tài khoản. Thành công hay thất bại.
 
 ### 4.2 Đăng nhập tài khoản
 
@@ -225,7 +223,7 @@ Hệ thống thông báo kết quả tạo DataObject mới cho người dùng. 
 - Nếu thành công, client dựa vào thông tin mà client gửi về (Cloud Config và replica.id), kết nối trực tiếp tới CloudNode chứa replica của DataObject và lấy về nội dung của DataObject, sau đó hiển thị nội dung lên màn hình hoặc tải xuống nội dung.
 - Nếu thất bại, thông báo lỗi tới người dùng.
 
-**Xin ý kiến: Trong lúc quét DataObject/Object Metadata, nếu phát hiện các Data Object có status bất thường thì có đẩy lên các queue xử lý hay không (tạo queue mới để xử lý corrupted file?)**
+**Vấn đề:** _Xin ý kiến: Trong lúc quét DataObject/Object Metadata, nếu phát hiện các Data Object có status bất thường thì có đẩy lên các queue xử lý hay không (tạo queue mới để xử lý corrupted file?)_
 
 ### 4.7 Tải xuống một thư mục (khác với xem nội dung thư mục - ở đây là lấy toàn bộ nội dung thư mục về)
 
@@ -365,7 +363,7 @@ Kịch bản sử dụng: Người dùng muốn gỡ bỏ một Cloud Server kh�
     - Successor Node không đủ dụng lượng để lưu trữ các Replica của Cloud Server chuẩn bị xóa:
         - Tạo lại cho Replica một ReplicaID khác
         - Chuyển Replica sang lưu trữ tại một Node khác trong hệ thống.
-    - Người dùng muốn gỡ bỏ đồng thời nhiều Cloud một lúc ?
+    - Hệ thống có cho phép người dùng gỡ bỏ đồng thời nhiều Cloud một lúc hay không?
 
 #### 4.13.3 Output
 
@@ -379,6 +377,8 @@ Kịch bản sử dụng: Người dùng muốn gỡ bỏ một Cloud Server kh�
 Folder được lựa chọn sẽ xóa
 
 #### 4.14 Các bước thực hiện
+
+## 5. Các thuật toán quan trọng được sử dụng trong hệ thống
 
 
 ## Các công việc cần thực hiện
