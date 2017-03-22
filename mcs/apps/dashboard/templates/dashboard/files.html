@@ -20,13 +20,69 @@
             	<button type="button" class="btn btn-default js-file-upload" data-url="{% url 'file_upload' %}">
             		<i class="ti-upload"></i>
             	</button>
-                <button type="button" class="btn btn-danger">
+                <button type="button" class="btn btn-danger js-folder-create" data-url="{% url 'folder_create' %}">
                     <i class="ti-plus"></i>
                 </button>
             </div>
     	</div>
     </div>
 </div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="content table-responsive table-full-width">
+                <table class="table table-striped">
+                    <thead>
+                        <th>NAME</th>
+                        <th>UPDATED AT</th>
+                        <th>TYPE</th>
+                        <th>SIZE</th>
+                    </thead>
+                    <tbody>
+                        {% for file in files.children %}
+                        {% if file.type == 'folder' %}
+                        <tr>
+                            <td>
+                                <a>
+                                   <span>
+                                       <a href="{% url 'files' %}?path={{ file.path }}">
+                                           <i class="ti-folder"><h7>  {{ file.name }}</h7></i>
+                                       </a>
+                                   </span>
+                                </a>
+                            </td>
+                            <td><p>---</p></td>
+                            <td><h7>{{ file.type }}</h7></td>
+                            <td><p>---</p></td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        {% for file in files.children %}
+                        {% if file.type == 'file' %}
+                        <tr>
+                            <td width="40%">
+                                <a>
+                                   <span>
+                                       <a href="#">
+                                           <i class="ti-file"><h7>  {{ file.name }}</h7></i>
+                                       </a>
+                                   </span> 
+                                </a>
+                            </td>
+                            <td><p>---</p></td>
+                            <td><h7>{{ file.type }}</h7></td>
+                            <td><p>---</p></td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Show/Hide Modal popup -->
 <div class="modal fade" id="modal-file">
     <div class="modal-dialog">

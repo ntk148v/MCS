@@ -43,6 +43,10 @@ $(function() {
     $(".js-file-upload").click(loadForm);
     $("#modal").on("submit", ".js-file-upload-form", saveForm);
 
+    // Create folder
+    $(".js-folder-create").click(loadForm);
+    $("#modal").on("submit", ".js-folder-create-form", saveForm);
+
     // // Update
     // $("#book-table").on("click", ".js-update", loadForm);
     // $("#modal").on("submit", ".js-update-form", saveForm);

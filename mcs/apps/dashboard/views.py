@@ -1,12 +1,16 @@
+import json
+
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 
 # from calplus import provider as calplus_provider
 # from calplus.client import Client
 
 from dashboard import forms
-# from mcs.apps.dashboard import models
+from dashboard import utils
+
+# from dashboard import models
 
 
 def save_file_form(request, form, template_name):
@@ -24,28 +28,35 @@ def save_file_form(request, form, template_name):
     return JsonResponse(data)
 
 
-def handle_uploaded_file(file):
-    #
-    # TODO:
-    # choose CloudNode by Chord
-    # cloud_node = models.CloudNode.objects.get(identifier=tmp)
-    # _provider = calplus_provider.Provider(cloud_node.type,
-    #                                      cloud_node.config)
-    # _client = Client(version='1.0.0',
-    #                  resource='object_storage',
-    #                  provider=_provider)
-    # _client.upload_object('files_container',
-    #                       file['data'].name,
-    #                       file['data'].content,)
-    #
-    pass
+def list_files(request):
+    if request.GET.get('path'):
+        _path = request.GET.get('path')
+    else:
+        _path = '/rfolder'
+    # Get data from json
+    with open('fake_data.json') as json_data:
+        _fdata = json.load(json_data)
+    # Init cdata as empty list
+    files = []
+    utils.get_folder_by_path(_fdata, _path, files)
+    return render(request, 'dashboard/files.html',
+                  {'files': files[0]})
 
 
-def file_upload(request):
+def create_folder(request):
+    if request.method == 'POST':
+        form = forms.CreateFolder(request.POST)
+    else:
+        form = forms.CreateFolder()
+    return save_file_form(request, form,
+                          'dashboard/include/partial_folder_create.html')
+
+
+def upload_file(request):
     if request.method == 'POST':
         form = forms.UploadObjectData(request.POST, request.FILES)
         form.save()
-        handle_uploaded_file(request.FILES['data'])
+        utils.handle_uploaded_file(request.FILES['data'])
         return redirect('files')
     else:
         form = forms.UploadObjectData()
