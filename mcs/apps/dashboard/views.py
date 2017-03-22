@@ -44,12 +44,18 @@ def list_files(request):
 
 
 def create_folder(request):
+    data = dict()
     if request.method == 'POST':
         form = forms.CreateFolder(request.POST)
     else:
         form = forms.CreateFolder()
-    return save_file_form(request, form,
-                          'dashboard/include/partial_folder_create.html')
+    data['form_is_valid'] = True
+    template_name = 'dashboard/include/partial_folder_create.html'
+    context = {'form': form}
+    data['html_form'] = render_to_string(template_name, context,
+                                         request=request)
+
+    return JsonResponse(data)
 
 
 def upload_file(request):
