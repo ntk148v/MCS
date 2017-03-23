@@ -1,23 +1,23 @@
-{% for file in files.children %}
-{% if file.type == 'folder' %}
+{% for file in folder.children.all %}
+{% if file.is_folder is True %}
 <tr>
     <td>
         <a>
            <span>
-               <a href="{% url 'files' %}?path={{ file.path }}">
+               <a href="{% url 'files' %}?folder_id={{ file.id }}">
                    <i class="ti-folder"><h7>  {{ file.name }}</h7></i>
                </a>
            </span>
         </a>
     </td>
     <td><p>---</p></td>
-    <td><h7>{{ file.type }}</h7></td>
+    <td><h7>{{ file.is_folder }}</h7></td>
     <td><p>---</p></td>
 </tr>
 {% endif %}
 {% endfor %}
-{% for file in files.children %}
-{% if file.type == 'file' %}
+{% for file in folder.children.all %}
+{% if file.is_folder is False %}
 <tr>
     <td width="40%">
         <a>
@@ -29,7 +29,7 @@
         </a>
     </td>
     <td><p>---</p></td>
-    <td><h7>{{ file.type }}</h7></td>
+    <td><h7>{{ file.is_folder }}</h7></td>
     <td><p>---</p></td>
 </tr>
 {% endif %}

@@ -17,10 +17,10 @@
                 <h4 class="title">File MANAGEMENT</h4>
             </div>
             <div class="content">
-            	<button type="button" class="btn btn-default js-file-upload" data-url="{% url 'file_upload' %}">
+            	<button type="button" class="btn btn-default js-file-upload" data-url="{% url 'upload_file' %}">
             		<i class="ti-upload"></i>
             	</button>
-                <button type="button" class="btn btn-danger js-folder-create" data-url="{% url 'folder_create' %}">
+                <button type="button" class="btn btn-danger js-folder-create" data-url="{{ url }}">
                     <i class="ti-plus"></i>
                 </button>
             </div>
