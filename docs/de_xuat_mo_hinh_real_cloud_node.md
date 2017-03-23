@@ -59,7 +59,7 @@ Như đã trình bày ở các phần phía trên, các vấn đề xảy ra khi
 
 **Ý tưởng 1 - Sử dụng ý tưởng gom nhóm và virtual node của Swift** - Lấy cảm hứng từ ý tưởng mapping partition Replica - Device được sử dụng trong Swift ring, Chúng ta xây dựng một mô hình Chord ring mới, với cấu hình cố định số Replica của 1 Data Object là **k** theo các bước sau:
 
-1. Tạo ra cho mỗi một Cloud Server **i** trong tập các Cloud Server **k\_i** _virtual\_cloud_, các _virtual\_cloud_ sẽ tham chiếu tới Clou Server **i**. **k\_i** tỉ lệ thuận với Cloud Server Weight và hệ số _virtual\_factor_
+1. Tạo ra cho mỗi một Cloud Server **i** trong tập các Cloud Server **k\_i** các _virtual\_cloud_, các _virtual\_cloud_ sẽ tham chiếu tới Cloud Server **i**. Giá trị **k\_i** tỉ lệ thuận với Cloud Server Weight và hệ số _virtual\_factor_
 1. Gom **k** virutal\_cloud vào 1 Node, sao cho **k** virtual\_cloud này tham chiếu tới các Cloud Server đôi một phân biệt nhau theo một thuật toán nhất định, ta được một tập các Node.
 1. Xếp các Node lên Chord Ring.
 
@@ -76,10 +76,10 @@ Nếu sử dụng phương pháp này, chúng ta không cần lưu lại các Re
 Xử lý:
 
 1. Bước 1: Tạo Virutal Cloud cho các cloud server:
-    - Tạo các _virtual\_cloud_ cho S1: w1*_virtual\_factor_ = 4: S1\_1; S1\_2; S1\_3; S1\_4
-    - Tạo các _virtual\_cloud_ cho S2: w2*_virtual\_factor_ = 8: S2\_1; S2\_2; S2\_3; S2\_4; S2\_5; S2\_6; S2\_7 ;S2\_8
-    - Tạo các _virtual\_cloud_ cho S3: w3*_virtual\_factor_ = 4: S3\_1; S3\_2; S3\_3; S3\_4
-1. Bước 2: Tạo các Node từ tập các virtual\_cloud. Ta có 12 _virtual\_cloud_, hệ số replica x = 2, do đó ring có 16/2 = 8 Node:
+    - Tạo các _virtual\_cloud_ cho S1: w1*_virtual\_factor_ = 4: **S1\_1; S1\_2; S1\_3; S1\_4**
+    - Tạo các _virtual\_cloud_ cho S2: w2*_virtual\_factor_ = 8: **S2\_1; S2\_2; S2\_3; S2\_4; S2\_5; S2\_6; S2\_7 ;S2\_8**
+    - Tạo các _virtual\_cloud_ cho S3: w3*_virtual\_factor_ = 4: **S3\_1; S3\_2; S3\_3; S3\_4**
+1. Bước 2: Tạo các Node từ tập các virtual\_cloud. Ta có 16 _virtual\_cloud_, hệ số replica x = 2, do đó ring có 16/2 = 8 Node:
 
     - Node1: S1\_1; S2\_1
     - Node2: S3\_1; S2\_2
