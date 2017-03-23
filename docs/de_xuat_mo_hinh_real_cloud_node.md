@@ -51,4 +51,49 @@ Các đề xuất cải tiến mô hình hiện tại đang sử dụng:
 
 - Virtual Node number base Cloud Server Weight: Dung lượng Cloud Server đang xét càng lớn thì số lượng Node trên Ring tham chiếu tới Cloud Server này càng nhiều. Ví dụ Cloud Server có dung lượng 300GB sẽ được 3 virtual Node tham chiếu tới, Cloud Server có dung lượng 900 GB sẽ được 9 virtual node tham chiếu tới
 
-- Giải pháp phòng ngừa các ReplicaID cùng nằm trên một Cloud Server: Đang phát triển.
+## Giải pháp phòng ngừa các ReplicaID cùng nằm trên một Cloud Server
+
+Một số ý tưởng giải quyết vấn đề trùng lặp CloudID trên hệ thống khi sử dụng Cơ chế Chord Ring
+
+Như đã trình bày ở các phần phía trên, các vấn đề xảy ra khi hệ thống sử dụng cơ chế Chord Ring, đó là vấn đề làm sao để các Replica của 1 Data Object dược phân phối lên các Cloud Server khác nhau ? Giải pháp hiện tại đang làm là phải thử các ReplicaID và phải lưu lại các Replica Name đã chọn được => xảy ra các vấn đề liên quan tới bottleneck và failure pointer ở Database Node. Phần này sẽ trình bày 1 số ý tưởng có khả năng giải quyết các vấn đề này.
+
+**Ý tưởng 1 - Sử dụng ý tưởng gom nhóm và virtual node của Swift** - Lấy cảm hứng từ ý tưởng mapping partition Replica - Device được sử dụng trong Swift ring, Chúng ta xây dựng một mô hình Chord ring mới, với cấu hình cố định số Replica của 1 Data Object là **k** theo các bước sau:
+
+1. Tạo ra cho mỗi một Cloud Server **i** trong tập các Cloud Server **k\_i** _virtual\_cloud_, các _virtual\_cloud_ sẽ tham chiếu tới Clou Server **i**. **k\_i** tỉ lệ thuận với Cloud Server Weight và hệ số _virtual\_factor_
+1. Gom **k** virutal\_cloud vào 1 Node, sao cho **k** virtual\_cloud này tham chiếu tới các Cloud Server đôi một phân biệt nhau theo một thuật toán nhất định, ta được một tập các Node.
+1. Xếp các Node lên Chord Ring.
+
+Nếu sử dụng phương pháp này, chúng ta không cần lưu lại các ReplicaID nữa.
+
+**Ví dụ cho ý tưởng**:
+
+Đầu vào:
+
+- 3 Cloud Server S1 - 100 GB (weight=1), S2 - 200GB (weight=2), S3 - 100 GB (weight=1)
+- Hệ số _virtual\_factor_ = 4
+- Hệ số Replica x = 2
+
+Xử lý:
+
+1. Bước 1: Tạo Virutal Cloud cho các cloud server:
+    - Tạo các _virtual\_cloud_ cho S1: w1*_virtual\_factor_ = 4: S1\_1; S1\_2; S1\_3; S1\_4
+    - Tạo các _virtual\_cloud_ cho S2: w2*_virtual\_factor_ = 8: S2\_1; S2\_2; S2\_3; S2\_4; S2\_5; S2\_6; S2\_7 ;S2\_8
+    - Tạo các _virtual\_cloud_ cho S3: w3*_virtual\_factor_ = 4: S3\_1; S3\_2; S3\_3; S3\_4
+1. Bước 2: Tạo các Node từ tập các virtual\_cloud. Ta có 12 _virtual\_cloud_, hệ số replica x = 2, do đó ring có 16/2 = 8 Node:
+
+    - Node1: S1\_1; S2\_1
+    - Node2: S3\_1; S2\_2
+    - Node3: S1\_2; S2\_3
+    - Node4: S3\_2; S2\_4
+    - Node5: S1\_3; S2\_5
+    - Node6: S3\_3; S2\_6
+    - Node7: S1\_4; S2\_7
+    - Node8: S3\_4; S2\_8
+
+1. Bước 3: Xếp 8 Node vừa được sinh ra lên Chord Ring.
+
+![propose_new_architect.png](./images/propose_new_architect.png)
+
+Sau bước này, chúng ta thiết lập thành công Ring cho hệ thống.
+
+Khi sử dụng Ring này, một object đi vào sẽ được Hashing ID theo tên và dựa vào Chord Protocol để xác định xem Object này tương ứng với node nào trên Ring. Giả sử Object **x** có HashID có Successor node là Node 5, thì chúng ta sẽ lưu và lấy các Replica của **x** trong Node 5. như chúng ta thấy, Node 5 có 2 Virtual Node ánh xạ tới Cloud Server S1 và S2, do đó 1 Replica của x sẽ được lưu trên S1, replica còn lại của x sẽ dược lưu trên S2. Tương tự, nếu **x** có HashID có Successor node là Node 6, thì 1 Replica của x sẽ được lưu trên S2, replica còn lại của x sẽ dược lưu trên S3.
