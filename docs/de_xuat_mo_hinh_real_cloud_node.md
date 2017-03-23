@@ -32,6 +32,8 @@ Khi số lượng Replica cần sao lưu là k = 3,4,5... Thì vấn đề tươ
 
 Swift Ring xử lý tốt hơn vấn đề trùng lặp so với Chord Ring.
 
+- Vấn đề về việc Remove Cloud Node: Khi gỡ bỏ 1 node hệ thống, xảy ra khả năng theo quy luật của Chord, một Replica của Data Objec **x** trên node bị gỡ bỏ sẽ chuyển về nằm cùng một Replica khác của x trên Successor của Node bị gỡ bỏ => Vấn đề trùng lặp tiếp tục xuất hiện. Giải pháp là chúng ta phải tạo lại ReplicaId cho replica này ???
+
 Một số ý tưởng về các ưu điểm của mô hình hiện tại:
 
 - Khi thêm các Data Object vào hệ thống, cơ chế tự nhiên của Chord Ring cho phép phân phối đều các Data Object lên các Node trong Ring. Nếu chúng ta muốn hệ thống cũng có tính chất này khi sử dụng phương pháp SQL Table Mapping, thì mỗi lần thêm mới 1 Data Object, chúng ta lại phải thực hiện một khối lượng tính toán lớn để chọn ra Cloud Server nào phù hợp để lưu trữ Data Object mới. Trong trường hợp Có nhiều Data Object cùng thêm vào hệ thống trong 1 khoảng thời gian ngắn, thì khó có khả năng chúng ta duy trì được tính phân phối đều cho hệ thống.
