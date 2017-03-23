@@ -27,7 +27,7 @@ Ví dụ về giải pháp chống trùng lặp: Tên của Data Object cần l�
 Khi số lượng Replica cần sao lưu là k = 3,4,5... Thì vấn đề tương tự xảy ra. Vi vậy, vấn đề của giải pháp hiện tại (*) là:
 
 - Chưa tối ưu. Chúng ta không biết số lượng chính xác số các ReplicaID cần phải thử là bao nhiêu để có được **k** ReplicaID phù hợp để lưu vào **k** Cloud Server khác nhau.
-- Chúng ta phải lưu lại các Replica phù hợp của Data Object trên vào hệ thống. Như ở ví dụ trên, chúng ta phải lưu 2 ReplicID là  **RID\_1** và **RID\_5** vào cơ sở dữ liệu.
+- Chúng ta phải lưu lại các Replica phù hợp của Data Object trên vào hệ thống. Như ở ví dụ trên, chúng ta phải lưu 2 Replica có name là **X.png\_replica\_5** và **X.png\_replica\_3** vào cơ sở dữ liệu
 - Khi sinh ra quá nhiều các RepliaID và thử nghiệm như vậy, thì 1 tính chất của Chord, đó là phân phối tự nhiên bị mất đi (do chúng ta cứ thực hiện việc chọn RID quá nhiều lần). Tuy nhiên nếu không chọn ReplicaID, thì chúng ta không đảm bảo rằng **k** replica của Data Object này sẽ nằm trên **k** Cloud Server khác nhau.
 
 Swift Ring xử lý tốt hơn vấn đề trùng lặp so với Chord Ring.
@@ -43,9 +43,10 @@ Một số ý tưởng về các ưu điểm của mô hình hiện tại:
 
 - Kích thước rất nhỏ của Ring so với Database cho phép chúng ta có thể load trực tiếp Chord Ring lên RAM để tăng tốc độ truy cập vào Ring, do kích thước của Chord Ring là nhỏ, còn với CSDL, việc này là bất khả thi, nhất là trong trường hợp hệ thống có số lượng Object lên tới hàng triệu Object => SQL phải lưu trữ hàng triệu Record tương đương với số lượng Object trên bảng=> Không đủ RAM để lưu trữ Database.
 
-
-Các đề xuất cải tiến mô hình đang đề xuất:
+Các đề xuất cải tiến mô hình hiện tại đang sử dụng:
 
 - Virtual Node: Sử dụng nhiều Node ảo thay vì một node tham chiếu tới cùng một Cloud Server để làm tăng số Cloud Node trên hệ thống => Tăng tính chất phân phối phân tán cho hệ thống. Virtual Node có được đề cập trong bài báo Chord.
 
 - Virtual Node number base Cloud Server Weight: Dung lượng Cloud Server đang xét càng lớn thì số lượng Node trên Ring tham chiếu tới Cloud Server này càng nhiều. Ví dụ Cloud Server có dung lượng 300GB sẽ được 3 virtual Node tham chiếu tới, Cloud Server có dung lượng 900 GB sẽ được 9 virtual node tham chiếu tới
+
+- Giải pháp phòng ngừa các ReplicaID cùng nằm trên một Cloud Server: Đang phát triển.
