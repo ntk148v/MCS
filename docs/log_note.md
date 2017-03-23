@@ -91,3 +91,4 @@ Vấn đề trong hướng này: Chứng minh rằng cách sử dụng Chord Pro
 - Thầy muốn sử dụng Chord Ring với các Node trên Ring là Các Data Item, và các DataItem sẽ trỏ tới vị trí các DataItem Node khác trên Ring.
 
 - Góc nhìn của thầy đối với hệ thống, đó là tập các Cloud Server của User là thành phần có tính tương đối cố định, tức là các sự kiện Gắn thêm 1 Cloud Server/ Loại bỏ 1 Cloud Server là rất ít khi xảy ra. Các Node trên Chord Ring là Các Data Item, và các thành phần thường xuyên gia nhập và rời khỏi hệ thống là các DataItem chứ không phải là các Cloud Server.
+
