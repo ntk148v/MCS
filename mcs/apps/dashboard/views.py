@@ -1,13 +1,13 @@
 from django.core.urlresolvers import reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 
 # from calplus import provider as calplus_provider
 # from calplus.client import Client
 
-from dashboard import forms
-from dashboard import models
+from dashboard.forms import CreateFolderForm, UploadObjectData
+from dashboard.models import File
 from dashboard import utils
 
 
@@ -34,13 +34,24 @@ def list_files(request, folder_id=None):
         folder_id = request.POST.get('folder_id')
     if folder_id:
         try:
-            folder = models.File.objects.get(id=folder_id)
+            folder = File.objects.get(id=folder_id)
             url = reverse('create_folder',
                           kwargs={'folder_id': folder_id})
-        except models.File.DoesNotExist as e:
+        except File.DoesNotExist as e:
             raise e
     else:
-        folder = models.File.objects.get(name='root')
+        # Check if root doesn't exist, create it
+        try:
+            folder = File.objects.get(name='root')
+        except File.DoesNotExist:
+            # TODO: When we have User, set `owner` field
+            # folder = File.objects.create(name='root',
+            #                              is_root=True,
+            #                              is_folder=True
+            #                              owner=<current_user>)
+            folder = File.objects.create(name='root',
+                                         is_root=True,
+                                         is_folder=True)
         url = reverse('create_root_folder')
 
     return render(request, 'dashboard/files.html',
@@ -54,31 +65,37 @@ def create_folder(request, folder_id=None):
     if not folder_id:
         folder_id = request.POST.get('folder_id')
     if folder_id:
-        folder = models.File.objects.get(id=folder_id)
+        # TODO: Add try-except handle File.DoesntExist exception
+        folder = File.objects.get(id=folder_id)
         url = reverse('create_folder',
                       kwargs={'folder_id': folder_id})
-        # Add try-catch handle FolderDoesntExist exception
     else:
-        # If don't get folder_id it's root
-        folder = models.File.objects.get(name='root')
+        # If don't get folder_id, it's root
+        try:
+            folder = File.objects.get(name='root')
+        except File.DoesNotExist:
+            folder = File.objects.create(name='root',
+                                         is_root=True,
+                                         is_folder=True)
         url = reverse('create_root_folder')
     if request.method == 'POST':
-        form = forms.CreateFolderForm(request.POST)
+        form = CreateFolderForm(request.POST)
         if form.is_valid():
             new_folder = form.save(commit=False)
             data['form_is_valid'] = True
             if folder.contains_folder(new_folder.name):
-                # Raise error Folder with this name already exists.
+                # TODO: Raise error Folder with this name already exists.
+                # Send error to form.
                 pass
             else:
                 new_folder.parent = folder
                 # new_folder.owner = request.user
                 new_folder.save()
-                return redirect('files')
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         else:
             data['form_is_valid'] = False
     else:
-        form = forms.CreateFolderForm()
+        form = CreateFolderForm()
 
     template_name = 'dashboard/include/partial_folder_create.html'
     data['html_form'] = render_to_string(template_name,
@@ -89,11 +106,11 @@ def create_folder(request, folder_id=None):
 
 def upload_file(request):
     if request.method == 'POST':
-        form = forms.UploadObjectData(request.POST, request.FILES)
+        form = UploadObjectData(request.POST, request.FILES)
         form.save()
         utils.handle_uploaded_file(request.FILES['data'])
         return redirect('files')
     else:
-        form = forms.UploadObjectData()
+        form = UploadObjectData()
     return save_file_form(request, form,
                           'dashboard/include/partial_file_upload.html')
