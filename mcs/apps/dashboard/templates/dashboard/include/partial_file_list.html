@@ -2,6 +2,9 @@
 {% if file.is_folder is True %}
 <tr>
     <td>
+        <div class="checkbox"><input type="checkbox" name="checked_files" value="{{ file.id }}"></div>
+    </td>
+    <td>
         <a>
            <span>
                <a href="{% url 'files' %}?folder_id={{ file.id }}">
@@ -11,7 +14,6 @@
         </a>
     </td>
     <td><p>---</p></td>
-    <td><h7>{{ file.is_folder }}</h7></td>
     <td><p>---</p></td>
 </tr>
 {% endif %}
@@ -19,7 +21,10 @@
 {% for file in folder.children.all %}
 {% if file.is_folder is False %}
 <tr>
-    <td width="40%">
+    <td>
+        <div class="checkbox"><input type="checkbox" name="checked_files" value="{{ file.id }}"></div>
+    </td>
+    <td>
         <a>
            <span>
                <a href="#">
@@ -29,7 +34,6 @@
         </a>
     </td>
     <td><p>---</p></td>
-    <td><h7>{{ file.is_folder }}</h7></td>
     <td><p>---</p></td>
 </tr>
 {% endif %}

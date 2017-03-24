@@ -19,6 +19,8 @@ urlpatterns = [
         views.create_folder, name='create_folder'),
     url(r'^files/create/$',
         views.create_folder, name='create_root_folder'),
+    url(r'^files/delete/$',
+        views.delete_files, name='delete_files'),
     url(r'^settings/$',
         TemplateView.as_view(template_name='dashboard/settings.html'),
         name='settings'),

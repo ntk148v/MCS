@@ -47,12 +47,8 @@ $(function() {
     $(".js-folder-create").click(loadForm);
     $("#modal").on("submit", ".js-folder-create-form", saveForm);
 
-    // // Update
-    // $("#book-table").on("click", ".js-update", loadForm);
-    // $("#modal").on("submit", ".js-update-form", saveForm);
-
-    // // Delete
-    // $("#book-table").on("click", ".js-delete", loadForm);
-    // $("#modal").on("submit", ".js-delete-form", saveForm);
+    // Delete
+    $(".js-files-delete").click(loadForm);
+    $("#modal").on("submit", ".js-files-delete-form", saveForm);
 
 });

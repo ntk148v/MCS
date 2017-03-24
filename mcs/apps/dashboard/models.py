@@ -51,6 +51,7 @@ class File(models.Model):
     # owner = models.ForeignKey('User')
     last_modified = models.DateTimeField('last_modified',
                                          auto_now_add=True)
+    path = models.CharField('path', null=True, max_length=255)
     content = models.FileField('content', null=True)
     is_folder = models.BooleanField('is_folder',
                                     default=True)

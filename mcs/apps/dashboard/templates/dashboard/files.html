@@ -20,8 +20,11 @@
             	<button type="button" class="btn btn-default js-file-upload" data-url="{% url 'upload_file' %}">
             		<i class="ti-upload"></i>
             	</button>
-                <button type="button" class="btn btn-danger js-folder-create" data-url="{{ url }}">
+                <button type="button" class="btn btn-primary js-folder-create" data-url="{{ url }}">
                     <i class="ti-plus"></i>
+                </button>
+                <button type="button" class="btn btn-danger js-files-delete" data-url="{% url 'delete_files' %}">
+                    <i class="ti-trash"></i>
                 </button>
             </div>
     	</div>
@@ -34,10 +37,10 @@
             <div class="content table-responsive table-full-width">
                 <table class="table table-striped">
                     <thead>
-                        <th>NAME</th>
-                        <th>UPDATED AT</th>
-                        <th>TYPE</th>
-                        <th>SIZE</th>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Modified</th>
+                        <th>Size</th>
                     </thead>
                     <tbody>
                         {% include 'dashboard/include/partial_file_list.html' %}

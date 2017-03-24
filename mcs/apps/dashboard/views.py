@@ -104,6 +104,21 @@ def create_folder(request, folder_id=None):
     return JsonResponse(data)
 
 
+def delete_files(request):
+    data = dict()
+    if request.method == 'POST':
+        File.objects.filter(
+            id__in=request.POST.getlist('checked_files')).delete()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+    template_name = 'dashboard/include/partial_files_delete.html'
+    data['html_form'] = render_to_string(template_name,
+                                         context=None,
+                                         request=request)
+    data['form_is_valid'] = True
+    return JsonResponse(data)
+
+
 def upload_file(request):
     if request.method == 'POST':
         form = UploadObjectData(request.POST, request.FILES)
