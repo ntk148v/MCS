@@ -1,14 +1,7 @@
 from django import forms
 from django.contrib.admin import widgets
 
-from dashboard.models import ObjectData, File
-
-
-class UploadFile(forms.ModelForm):
-
-    class Meta:
-        model = File
-        exclude = ['name', 'path', 'is_folder', 'size', 'parent_path']
+from dashboard.models import File
 
 
 class CreateFolderForm(forms.ModelForm):
@@ -21,8 +14,8 @@ class CreateFolderForm(forms.ModelForm):
         }
 
 
-class UploadObjectData(forms.ModelForm):
+class UploadFileForm(forms.ModelForm):
 
     class Meta:
-        model = ObjectData
-        fields = ('data',)
+        model = File
+        fields = ('content',)

@@ -27,16 +27,6 @@ class CloudNode(models.Model):
     USERNAME_FIELD = 'identifier'
 
 
-class ObjectData(models.Model):
-
-    class Meta:
-        db_table = 'objectdata'
-        app_label = 'dashboard'
-
-    data = models.FileField(name='data')
-    last_modified = models.DateTimeField(auto_now_add=True)
-
-
 class FileManager(models.Manager):
     pass
 
@@ -65,7 +55,7 @@ class File(models.Model):
 
     objects = FileManager()
 
-    def contains_folder(self, folder_name):
+    def contains_file(self, folder_name):
         try:
             self.children.get(name=folder_name)
             return True

@@ -39,7 +39,7 @@ $(function() {
 
     /* Binding */
 
-    // Create/Upload
+    // Create/Upload file
     $(".js-file-upload").click(loadForm);
     $("#modal").on("submit", ".js-file-upload-form", saveForm);
 
@@ -50,7 +50,8 @@ $(function() {
     // Delete
     // $(".js-files-delete").click(loadForm);
     // $("#delete-confirm").click(function(){
-    //     saveForm();
+    //     // saveForm();
+    //     console.log();
     //     $('#delete-form').submit();
     // })
 
