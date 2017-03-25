@@ -55,7 +55,7 @@ Các đề xuất cải tiến mô hình hiện tại đang sử dụng:
 
 Một số ý tưởng giải quyết vấn đề trùng lặp CloudID trên hệ thống khi sử dụng Cơ chế Chord Ring
 
-Như đã trình bày ở các phần phía trên, các vấn đề xảy ra khi hệ thống sử dụng cơ chế Chord Ring, đó là vấn đề làm sao để các Replica của 1 Data Object dược phân phối lên các Cloud Server khác nhau ? Giải pháp hiện tại đang làm là phải thử các ReplicaID và phải lưu lại các Replica Name đã chọn được => xảy ra các vấn đề liên quan tới bottleneck và failure pointer ở Database Node. Phần này sẽ trình bày 1 số ý tưởng có khả năng giải quyết các vấn đề này.
+Như đã trình bày ở các phần phía trên, các vấn đề xảy ra khi hệ thống sử dụng cơ chế Chord Ring, đó là vấn đề làm sao để các Replica của 1 Data Object được phân phối lên các Cloud Server khác nhau ? Giải pháp hiện tại đang làm là phải thử các ReplicaID và phải lưu lại các Replica Name đã chọn được => xảy ra các vấn đề liên quan tới bottleneck và failure pointer ở Database Node. Phần này sẽ trình bày 1 số ý tưởng có khả năng giải quyết các vấn đề này.
 
 **Ý tưởng 1 - Sử dụng ý tưởng gom nhóm và virtual node của Swift** - Lấy cảm hứng từ ý tưởng mapping partition Replica - Device được sử dụng trong Swift ring, Chúng ta xây dựng một mô hình Chord ring mới, với cấu hình cố định số Replica của 1 Data Object là **k** theo các bước sau:
 
@@ -96,4 +96,4 @@ Xử lý:
 
 Sau bước này, chúng ta thiết lập thành công Ring cho hệ thống.
 
-Khi sử dụng Ring này, một object đi vào sẽ được Hashing ID theo tên và dựa vào Chord Protocol để xác định xem Object này tương ứng với node nào trên Ring. Giả sử Object **x** có HashID có Successor node là Node 5, thì chúng ta sẽ lưu và lấy các Replica của **x** trong Node 5. như chúng ta thấy, Node 5 có 2 Virtual Node ánh xạ tới Cloud Server S1 và S2, do đó 1 Replica của x sẽ được lưu trên S1, replica còn lại của x sẽ dược lưu trên S2. Tương tự, nếu **x** có HashID có Successor node là Node 6, thì 1 Replica của x sẽ được lưu trên S2, replica còn lại của x sẽ dược lưu trên S3.
+Khi sử dụng Ring này, một object đi vào sẽ được Hashing ID theo tên và dựa vào Chord Protocol để xác định xem Object này tương ứng với node nào trên Ring. Giả sử Object **x** có HashID có Successor node là Node 5, thì chúng ta sẽ lưu và lấy các Replica của **x** trong Node 5. như chúng ta thấy, Node 5 có 2 Virtual Node ánh xạ tới Cloud Server S1 và S2, do đó 1 Replica của x sẽ được lưu trên S1, replica còn lại của x sẽ được lưu trên S2. Tương tự, nếu **x** có HashID có Successor node là Node 6, thì 1 Replica của x sẽ được lưu trên S2, replica còn lại của x sẽ được lưu trên S3.

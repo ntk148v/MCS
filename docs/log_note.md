@@ -92,3 +92,26 @@ Vấn đề trong hướng này: Chứng minh rằng cách sử dụng Chord Pro
 
 - Góc nhìn của thầy đối với hệ thống, đó là tập các Cloud Server của User là thành phần có tính tương đối cố định, tức là các sự kiện Gắn thêm 1 Cloud Server/ Loại bỏ 1 Cloud Server là rất ít khi xảy ra. Các Node trên Chord Ring là Các Data Item, và các thành phần thường xuyên gia nhập và rời khỏi hệ thống là các DataItem chứ không phải là các Cloud Server.
 
+## 24/3/2017
+
+- Thầy yêu cầu mô tả 3 mô hình dưới đây. Sau đó, phân tích và chứng minh mô hình Reference Node là mô hình hiệu quả nhất (theo lý thuyết):
+
+3 Mô hình được đưa ra phân tích là: mô hình VM Ring with Virtual Machine Node, mô hình Cloud Ring with Reference Node và mô hình Mapping (CloudID,ObjectID) by SQL Table.
+
+Các bước mô tả, phân tích và chứng minh cụ thể như sau:
+
+Phần 1: Giới thiệu và triển khai các mô hình khả thi để giải quyết cơ chế Lookup và tương tác với Data Object.
+
+Phần 2: Phân tích, so sánh các mô hình với nhau trên các tiêu chí cụ thể. Sau đó, nêu ra các ưu điểm, nhược điểm của từng mô hình.
+
+Kết luận phần 2: Mô hình được lựa chọn mô hình nào, lý do lựa chọn mô hình đó ?
+
+Phần 3: Phân tích kỹ hơn về mô hình đã lựa chọn
+
+## 25/3/2017
+
+Ý kiến của anh Hiếu:
+
+- Triển khai đầy đủ 3 mô hình thầy đề xuất thành 3 bài viết riêng biệt. Viết chi tiết về các vấn đề mà 3 mô hình phải giải quyết (lookup, update, move data, fault tolerance, replicate, load balance...)
+- Về đọc lại xem làm sao để khi người dùng muốn truy cập vào nội dung một data Object, thì hệ thống check được container chứa object đó nằm trong account của người dùng, và object người dùng muốn truy cập nằm trong container trên mà không truy cập vào device chứa nội dung container và account. (Tìm hiểu Swift auditor service)
+- Xây dựng mô hình multi-ring, 1 Ring chứa thông tin về các Account - Ring này do hệ thống MCS quản lý, và mỗi 1 account chứa 1 Cloud Server Ring độc lập với nhau.
