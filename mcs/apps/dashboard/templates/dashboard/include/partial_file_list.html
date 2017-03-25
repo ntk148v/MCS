@@ -2,7 +2,9 @@
 {% if file.is_folder is True %}
 <tr>
     <td>
-        <div class="checkbox"><input type="checkbox" name="checked_files" value="{{ file.id }}"></div>
+        <div class="checkbox">
+          <input type="checkbox" name="checked_file" value="{{ file.id }}">
+        </div>
     </td>
     <td>
         <a>
@@ -22,7 +24,7 @@
 {% if file.is_folder is False %}
 <tr>
     <td>
-        <div class="checkbox"><input type="checkbox" name="checked_files" value="{{ file.id }}"></div>
+        <div class="checkbox"><input type="checkbox" name="checked_file" value="{{ file.id }}"></div>
     </td>
     <td>
         <a>

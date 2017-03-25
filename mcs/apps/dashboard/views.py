@@ -71,12 +71,14 @@ def create_folder(request, folder_id=None):
                       kwargs={'folder_id': folder_id})
     else:
         # If don't get folder_id, it's root
+        # And if doen't have root folder, create it
         try:
             folder = File.objects.get(name='root')
         except File.DoesNotExist:
             folder = File.objects.create(name='root',
                                          is_root=True,
-                                         is_folder=True)
+                                         is_folder=True,
+                                         path='/rfolder/')
         url = reverse('create_root_folder')
     if request.method == 'POST':
         form = CreateFolderForm(request.POST)
@@ -90,6 +92,7 @@ def create_folder(request, folder_id=None):
             else:
                 new_folder.parent = folder
                 # new_folder.owner = request.user
+                new_folder.path = folder.path + str(new_folder.name)
                 new_folder.save()
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         else:
@@ -106,16 +109,17 @@ def create_folder(request, folder_id=None):
 
 def delete_files(request):
     data = dict()
-    if request.method == 'POST':
-        File.objects.filter(
-            id__in=request.POST.getlist('checked_files')).delete()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    template_name = 'dashboard/include/partial_files_delete.html'
-    data['html_form'] = render_to_string(template_name,
-                                         context=None,
-                                         request=request)
+    files = File.objects.filter(
+        id__in=request.POST.getlist('checked_file'))
     data['form_is_valid'] = True
+    if request.method == 'POST':
+        files.delete()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    else:
+        template_name = 'dashboard/include/partial_files_delete.html'
+        data['html_form'] = render_to_string(template_name,
+                                             {'files': files},
+                                             request=request)
     return JsonResponse(data)
 
 

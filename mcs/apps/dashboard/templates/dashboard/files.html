@@ -23,7 +23,10 @@
                 <button type="button" class="btn btn-primary js-folder-create" data-url="{{ url }}">
                     <i class="ti-plus"></i>
                 </button>
-                <button type="button" class="btn btn-danger js-files-delete" data-url="{% url 'delete_files' %}">
+               <!--  <button type="submit" class="btn btn-danger js-files-delete" data-url="{% url 'delete_files' %}" form="delete-form">
+                    <i class="ti-trash"></i>
+                </button> -->
+                <button type="submit" class="btn btn-danger js-files-delete" form="delete-form" onclick="return confirm('Are you sure?');return false;">
                     <i class="ti-trash"></i>
                 </button>
             </div>
@@ -35,17 +38,20 @@
     <div class="col-md-12">
         <div class="card">
             <div class="content table-responsive table-full-width">
-                <table class="table table-striped">
-                    <thead>
-                        <th></th>
-                        <th>Name</th>
-                        <th>Modified</th>
-                        <th>Size</th>
-                    </thead>
-                    <tbody>
-                        {% include 'dashboard/include/partial_file_list.html' %}
-                    </tbody>
-                </table>
+                <form id="delete-form" action="{% url 'delete_files' %}" method="POST">
+                    {% csrf_token %}
+                    <table class="table table-striped">
+                        <thead>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Modified</th>
+                            <th>Size</th>
+                        </thead>
+                        <tbody>
+                            {% include 'dashboard/include/partial_file_list.html' %}
+                        </tbody>
+                    </table>
+                </form>
             </div>
         </div>
     </div>
