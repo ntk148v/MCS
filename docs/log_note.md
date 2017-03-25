@@ -94,7 +94,7 @@ Vấn đề trong hướng này: Chứng minh rằng cách sử dụng Chord Pro
 
 ## 24/3/2017
 
-- Thầy yêu cầu mô tả 3 mô hình dưới đây. Sau đó, phân tích và chứng minh mô hình Reference Node là mô hình hiệu quả nhất (theo lý thuyết):
+Thầy yêu cầu mô tả 3 mô hình dưới đây. Sau đó, phân tích và chứng minh mô hình Reference Node là mô hình hiệu quả nhất (theo lý thuyết):
 
 3 Mô hình được đưa ra phân tích là: mô hình VM Ring with Virtual Machine Node, mô hình Cloud Ring with Reference Node và mô hình Mapping (CloudID,ObjectID) by SQL Table.
 
