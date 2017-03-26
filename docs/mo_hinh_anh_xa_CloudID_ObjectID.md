@@ -42,7 +42,6 @@ Client sẽ gửi yêu cầu tải về một Data Object có tên tuyệt đố
 
 sẽ được lưu trữ trên các VM node. Thầy muốn phát triển thêm về mô hình này
 
-
 ### 1.2 Mô hình Cloud Ring with Reference Node
 
 Mô hình Cloud Ring with Reference Node cũng được xây dựng dựa trên nền tảng Chord Protocol, tuy nhiên Ring lúc này là một đối tượng nằm bên trong MCS WSGI Server các Node trên Chord Logic Ring lúc này sẽ là các đối tượng tồn tại bên trong WSGI Server Process.
