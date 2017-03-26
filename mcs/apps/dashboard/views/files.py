@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 
 from dashboard.forms import CreateFolderForm, UploadFileForm
 from dashboard.models import File
+from dashboard import utils
 
 
 def _get_folder(request, folder_id=None, urls={}):
@@ -111,6 +112,8 @@ def create_folder(request, folder_id=None):
 
 
 def delete_files(request):
+    # TODO: In the case, user doesn't choose anything
+    #       Throw alert.
     files = File.objects.filter(
         id__in=request.POST.getlist('checked_file'))
     # Delete the files -> Done
@@ -143,6 +146,9 @@ def upload_file(request, folder_id=None):
                 new_file.size = request.FILES['content'].size
                 new_file.is_folder = False
                 new_file.save()
+                # Save file by hashed id
+                utils.handle_uploaded_file(request.FILES['content'],
+                                           new_file.path)
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         else:
             data['form_is_valid'] = False
@@ -154,3 +160,12 @@ def upload_file(request, folder_id=None):
                                          {'form': form, 'url_upload': url},
                                          request=request)
     return JsonResponse(data)
+
+
+def download_file(request):
+    # TODO: In the case, user doesn't choose anything
+    #       Throw alert.
+    files = File.objects.filter(
+        id__in=request.POST.getlist('checked_file'))
+    # TODO: Get object from CloudNode
+    #       then send back to download.

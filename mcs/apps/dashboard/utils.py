@@ -1,18 +1,33 @@
-def handle_uploaded_file(file):
-    #
-    # TODO:
-    # choose CloudNode by Chord
-    # cloud_node = models.CloudNode.objects.get(identifier=tmp)
-    # _provider = calplus_provider.Provider(cloud_node.type,
-    #                                      cloud_node.config)
-    # _client = Client(version='1.0.0',
-    #                  resource='object_storage',
-    #                  provider=_provider)
-    # _client.upload_object('files_container',
-    #                       file['data'].name,
-    #                       file['data'].content,)
-    #
-    pass
+import os
+import hashlib
+
+from django.conf import settings
+
+
+def user_directory_path(instance):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/2017/12/03/
+    return 'user_{0}/%Y/%m/%d/'.format(instance.owner.id)
+
+
+def handle_uploaded_file(file, filepath):
+    """Handle uploaded file. Hash its path then store it.
+    Tempory before push it to cloudnode.
+
+    Arguments:
+        file {[UploadedFile]}
+        filepath {[hashing_id]} -- [description]
+    """
+    # Delete auto-saved file. Find more pythonic way to handle this in
+    # future.
+    try:
+        os.remove(os.path.join(settings.MEDIA_ROOT, file.name))
+    except OSError:
+        pass
+
+    _new_file_name = hashlib.md5(filepath)
+    with open('/tmp/' + _new_file_name.hexdigest(), 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
 
 
 def get_folder_by_path(jsondata, path, result):

@@ -42,6 +42,7 @@ class File(models.Model):
     last_modified = models.DateTimeField('last_modified',
                                          auto_now_add=True)
     path = models.CharField('path', null=True, max_length=255)
+    # TODO: Change upload_to folder to /tmp/<user_id>/%Y/%m/%d
     content = models.FileField('content', null=True)
     is_folder = models.BooleanField('is_folder',
                                     default=True)
