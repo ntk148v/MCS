@@ -88,16 +88,16 @@ def create_folder(request, folder_id=None):
             new_folder = form.save(commit=False)
             data['form_is_valid'] = True
             if folder.contains_file(new_folder.name):
-                # TODO: Raise error Folder with this name already exists.
-                # Send error to form.
-                pass
+                # TODO: Show error in form
+                form._errors['name'] = form.error_class(['Folder with this \
+                                                         name already exists'])
             else:
                 new_folder.parent = folder
                 # new_folder.owner = request.user
                 # '/' at the end because it is folder.
                 new_folder.path = folder.path + str(new_folder.name) + '/'
                 new_folder.save()
-                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         else:
             data['form_is_valid'] = False
     else:
@@ -133,9 +133,9 @@ def upload_file(request, folder_id=None):
             new_file.name = request.FILES['content'].name
             data['form_is_valid'] = True
             if folder.contains_file(new_file.name):
-                # TODO: Raise error Folder with this name already exists.
-                # Send error to form.
-                pass
+                # TODO: Show error in form
+                form._errors['name'] = form.error_class(['File with this \
+                                                         name already exists'])
             else:
                 new_file.parent = folder
                 # new_folder.owner = request.user
