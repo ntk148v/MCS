@@ -1,4 +1,4 @@
-# Đề xuất mô hình Real-Cloud-Node
+# Đề xuất mô hình Virtual-Cloud-Reference-Node
 
 ## 1. Vấn đề hiện tại của mô hình Reference Node
 

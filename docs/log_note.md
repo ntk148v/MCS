@@ -124,7 +124,7 @@ Việc chúng ta thiết kế và sử dụng hệ thống hiện tại đang x�
 
 Loại đám mây - Loại File System:  Swift, S3, Google Cloud - NTFS, FAT32, ext3, ext4
 
-Khi sử ``dụng hệ thống của chúng ta, trên thực tế khi người dùng truy cập vào một Data Object lưu trữ trên hệ thống, hệ thống phải đi qua một lớp Abstraction Layer trước khi truy cập tới Cloud Server thực chứa Data Object mà người dùng muốn truy cập => hiệu năng giảm so với cách truy cập trực tiếp tới Cloud Server.
+Khi sử dụng hệ thống của chúng ta, trên thực tế khi người dùng truy cập vào một Data Object lưu trữ trên hệ thống, hệ thống phải đi qua một lớp Abstraction Layer trước khi truy cập tới Cloud Server thực chứa Data Object mà người dùng muốn truy cập => hiệu năng giảm so với cách truy cập trực tiếp tới Cloud Server.
 
 Mục tiêu về hiệu năng : Thiết kế hệ thống của chúng ta - chính là lớp Abstraction Layer, sao cho thời gian được hệ thống dùng để đi qua lớp abstraction Layer là nhỏ nhất có thể.
 
@@ -134,7 +134,7 @@ Kết luận: Mô hình hiện tại của hệ thống của chúng ta có rấ
 
 Nếu xét về khía cạnh một đồ án tốt nghiệp đơn giản, thì hệ thống của chúng ta không cần thiết phải xây dựng các cơ chế liên quan tới hiệu năng, cân bằng tải, sao lưu, chống lỗi,... Có quá nhiều tối ưu đã đặt vào hệ thống.
 
-Phạm vi của một đò án tốt nghiệp, theo em nghĩ chỉ cần làm được các vấn đề sau là đã rất ổn, theo quan điểm góc nhìn phân tích hệ thống Linux VFS:
+Phạm vi của một đò án tốt nghiệp, theo em nghĩ nếu nhìn theo quan điểm góc nhìn phân tích hệ thống Linux VFS:
 
 Cho phép người dùng tương tác vào các Data Object lưu trên các loại Cloud Server khác nhau theo một phương thức đồng nhất:
 
