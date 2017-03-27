@@ -55,7 +55,7 @@ venv
 *.iml
 *.iws
 
-mcs/settings/local.py
+# mcs/settings/local.py
 mcs/settings/production.py
 
 # collect static output directory

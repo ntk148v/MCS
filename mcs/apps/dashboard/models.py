@@ -19,12 +19,60 @@ class CloudNode(models.Model):
         db_table = 'cloudnode'
         app_label = 'dashboard'
 
+    STATE = {
+        'full': 'FULL',
+        'ok': 'OK',
+        'corrupt': 'CORRPUT',
+    }
+
+    # Hash from ip_address
     identifier = models.CharField(max_length=50)
     config = models.TextField()
-    type = models.TextField()
+    type = models.CharField(max_length=50)
+    ip_address = models.GenericIPAddressField()
+    state = models.CharField(max_length=1, choices=STATE)
     ring = models.ForeignKey('CloudRing', on_delete=models.CASCADE)
 
     USERNAME_FIELD = 'identifier'
+
+    def init_finger_table(self):
+        pass
+
+    def init_successor_list(self):
+        pass
+
+    def update_successor_list(self):
+        pass
+
+    # called periodically. n asks the successor
+    # about its predecessor, verifies if n's immediate
+    # successor is consistent, and tells the successor about n
+    def stabilize(self):
+        pass
+
+    # called periodically. refreshes finger table entries.
+    # next stores the index of the finger to fix
+    def fix_fingers(self):
+        pass
+
+    # ask node n to find the successor of id
+    def find_successor(self, object_id):
+        pass
+
+    # called periodically. checks whether predecessor has failed.
+    def check_predecessor(self):
+        pass
+
+    # search the local table for the highest predecessor of id
+    def closest_preceding_node(self, object_id):
+        pass
+
+    def create(self):
+        pass
+
+    # join a Chord ring containing node n'.
+    def join(self, node_id):
+        pass
 
 
 class FileManager(models.Manager):
