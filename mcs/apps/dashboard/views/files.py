@@ -1,5 +1,7 @@
+import hashlib
+
 from django.core.urlresolvers import reverse
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
 
@@ -56,7 +58,6 @@ def _get_folder(request, folder_id=None, urls={}):
 
 
 def list_files(request, folder_id=None):
-
     folder, url_create = _get_folder(request, folder_id=folder_id,
                                      urls={
                                          'rfolder': 'create_root_folder',
@@ -146,7 +147,7 @@ def upload_file(request, folder_id=None):
                 new_file.size = request.FILES['content'].size
                 new_file.is_folder = False
                 new_file.save()
-                # Save file by hashed id
+                # Save file by hashed id - temporary
                 utils.handle_uploaded_file(request.FILES['content'],
                                            new_file.path)
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -163,9 +164,11 @@ def upload_file(request, folder_id=None):
 
 
 def download_file(request):
-    # TODO: In the case, user doesn't choose anything
-    #       Throw alert.
-    files = File.objects.filter(
-        id__in=request.POST.getlist('checked_file'))
-    # TODO: Get object from CloudNode
-    #       then send back to download.
+    # Temporary download_file
+    from django.utils.encoding import smart_str
+
+    file = File.objects.get(id=request.POST.get('download_file'))
+    file_content = open('/tmp/' + hashlib.sha256(file.path).hexdigest(), 'r')
+    response = HttpResponse(file_content, content_type='application/octet-stream')
+    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(file.name)
+    return response

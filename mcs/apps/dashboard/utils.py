@@ -24,7 +24,7 @@ def handle_uploaded_file(file, filepath):
     except OSError:
         pass
 
-    _new_file_name = hashlib.md5(filepath)
+    _new_file_name = hashlib.sha256(filepath)
     with open('/tmp/' + _new_file_name.hexdigest(), 'wb+') as destination:
         for chunk in file.chunks():
             destination.write(chunk)
