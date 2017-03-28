@@ -12,7 +12,7 @@ def get_available_replica(filepath, number_of_replicas):
     # TODO:
     # _count = 1
     # while number_of_replicas >= _count:
-    #     replica_id = hashlib.md5(filepath + '_' + str(_count))
+    #     replica_id = hashlib.sha256(filepath + '_' + str(_count))
     #     replica = models.Replica.objects.get(identifier=replica_id)
     #     # Check its status, if OK get it.
     #     if replica.status == 'AVAILABLE':
@@ -23,17 +23,35 @@ def get_available_replica(filepath, number_of_replicas):
     pass
 
 
-@job()
-def upload_object(file, file_path):
-    """Upload object to cloudnode"""
+def upload_file(file, file_path):
+    """Upload file"""
     # TODO:
-    # import hashlib
+    # from dashboard.models import FileReplica
     #
-    # file_id = hashlib.md5(file_path).hexdigest()
-    # # Find succecssor - find the node will store the file
-    # # Should return instance of CloudNode.
-    # cloud_node = find_successor(file_id)
-    #
+    # NUMBER_OF_REPLICAS = 3 # Global var
+    # _count = 1
+    # while NUMBER_OF_REPLICAS >= _count:
+    #     replica_id, upload_result = upload_object.delay(file, file_path + '_' + str(_count))
+    #     if upload_result:
+    #         replica_status = UPDATE
+    #     else:
+    #         replica_status = NOT_UPDATE
+    #     replica = FileReplica(identifier=replica_id, status=replica_status)
+    #     replica.save()
+    # # Check replica status and define File status
+    pass
+
+
+
+@job()
+def upload_object(file, absolute_name):
+    """Upload object to cloud node with absolute_name
+    :param content(file type)
+    :param absolute_name(string): actually it's filepath
+    """
+    # TODO:
+    # object_id = hashlib.sha256(absolute_name).hexdigest()
+    # cloud_node = find_successor(object_id)
     # _provider = calplus_provider.Provider(cloud_node.type, dict(json.loads(provider.config)))
     # cal_client = Client(version='1.0.0',
     #                     resource='object_storage',
@@ -41,14 +59,8 @@ def upload_object(file, file_path):
     # # Check if container named 'files' exists
     # if not cal_client.stat_container('files'):
     #     cal_client.create_container('files')
-    # # Upload file content
-    # # Convert all response to the same format
-    # result = []
-    # _count = 1
-    # while number_of_replicas >= _count:
-    #     replica_id = hashlib.md5(filepath + '_' + str(_count))
-    #     result.append(convert_format(cal_client.upload_object('files', replica_id, contents=file.chunks())))
-    # return result
+    # # Upload
+    # return (object_id, cal_client.upload_object('files', object_id, contents=file.chunk()))
     pass
 
 

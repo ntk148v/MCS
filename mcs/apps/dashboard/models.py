@@ -1,36 +1,40 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from dashboard import utils
 
 
 class CloudRing(models.Model):
-
     class Meta:
         db_table = 'cloudring'
         app_label = 'dashboard'
 
-    identifier = models.CharField(max_length=50)
     USERNAME_FIELD = 'identifier'
 
 
 class CloudNode(models.Model):
-
     class Meta:
         db_table = 'cloudnode'
         app_label = 'dashboard'
 
-    STATE = {
-        'full': 'FULL',
-        'ok': 'OK',
-        'corrupt': 'CORRPUT',
-    }
+    # Define cloudnode's status
+    FULL = 1
+    OK = 2
+    CORRUPTED = 3
 
-    # Hash from ip_address
-    identifier = models.CharField(max_length=50)
+    STATUS = (
+        (FULL, 'FULL'),
+        (OK, 'OK'),
+        (CORRUPTED, 'CORRUPTED'),
+    )
+
     config = models.TextField()
     type = models.CharField(max_length=50)
     ip_address = models.GenericIPAddressField()
-    state = models.CharField(max_length=1, choices=STATE)
+    # Hash from ip_address
+    identifier = models.CharField('identifier', max_length=255, null=True,
+                                  default=utils.generate_hash_key(str(ip_address)))
+    status = models.IntegerField(choices=STATUS, blank=True, null=True, default=OK)
     ring = models.ForeignKey('CloudRing', on_delete=models.CASCADE)
 
     USERNAME_FIELD = 'identifier'
@@ -80,12 +84,32 @@ class FileManager(models.Manager):
 
 
 class File(models.Model):
-
     class Meta:
         db_table = 'file'
         app_label = 'dashboard'
 
+    # File(file only not folder)
+    # Update - all replica is updated
+    # Not_update - not all replica is updated
+    # Available - at least one replica is updated
+    # Not available - all replica is not updated
+    UPDATE = 1
+    NOT_UPDATE = 2
+    AVAILABLE = 3
+    NOT_AVAILABLE = 4
+
+    STATUS = (
+        (UPDATE, 'UPDATE'),
+        (NOT_UPDATE, 'NOT_UPDATE'),
+        (AVAILABLE, 'AVAILABLE'),
+        (NOT_AVAILABLE, 'NOT_AVAILABLE')
+    )
+
     name = models.CharField('name', max_length=255)
+    # Hash from name
+    identifier = models.CharField('identifier', max_length=255, null=True,
+                                  default=utils.generate_hash_key(name))
+    status = models.IntegerField(choices=STATUS, default=AVAILABLE, null=True, blank=True)
     # owner = models.ForeignKey('User')
     last_modified = models.DateTimeField('last_modified',
                                          auto_now_add=True)
@@ -110,3 +134,20 @@ class File(models.Model):
             return True
         except File.DoesNotExist:
             return False
+
+
+class FileReplica(models.Model):
+    class Meta:
+        db_table = 'replica'
+        app_label = 'dashboard'
+
+    UPDATE = 1
+    NOT_UPDATE = 2
+
+    STATUS = (
+        (UPDATE, 'UPDATE'),
+        (NOT_UPDATE, 'NOT_UPDATE'),
+    )
+
+    identifier = models.CharField('identifier', max_length=255, null=True)
+    status = models.IntegerField(choices=STATUS, default=NOT_UPDATE, null=True, blank=True)
