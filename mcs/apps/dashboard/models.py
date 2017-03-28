@@ -30,14 +30,17 @@ class CloudNode(models.Model):
 
     config = models.TextField()
     type = models.CharField(max_length=50)
-    ip_address = models.GenericIPAddressField()
+    ip_address = models.GenericIPAddressField(default=None)
     # Hash from ip_address
-    identifier = models.CharField('identifier', max_length=255, null=True,
-                                  default=utils.generate_hash_key(str(ip_address)))
+    identifier = models.CharField('identifier', max_length=255, null=True)
     status = models.IntegerField(choices=STATUS, blank=True, null=True, default=OK)
     ring = models.ForeignKey('CloudRing', on_delete=models.CASCADE)
 
     USERNAME_FIELD = 'identifier'
+
+    def save(self, *args, **kwargs):
+        self.identifier = utils.generate_hash_key(str(self.ip_address))
+        super(CloudNode, self).save(*args, **kwargs)
 
     def init_finger_table(self):
         pass
@@ -107,8 +110,7 @@ class File(models.Model):
 
     name = models.CharField('name', max_length=255)
     # Hash from name
-    identifier = models.CharField('identifier', max_length=255, null=True,
-                                  default=utils.generate_hash_key(name))
+    identifier = models.CharField('identifier', max_length=255, null=True)
     status = models.IntegerField(choices=STATUS, default=AVAILABLE, null=True, blank=True)
     # owner = models.ForeignKey('User')
     last_modified = models.DateTimeField('last_modified',
@@ -127,6 +129,10 @@ class File(models.Model):
                                related_name='children')
 
     objects = FileManager()
+
+    def save(self, *args, **kwargs):
+        self.identifier = utils.generate_hash_key(str(self.path))
+        super(File, self).save(*args, **kwargs)
 
     def contains_file(self, folder_name):
         try:
