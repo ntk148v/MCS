@@ -8,7 +8,7 @@ from django_rq import job
 SCHEDULER = django_rq.get_scheduler('default')
 
 
-def get_available_replica(filepath, number_of_replicas):
+def get_available_replica(filepath, number_of_replicas=3):
     # TODO:
     # _count = 1
     # while number_of_replicas >= _count:
@@ -23,14 +23,13 @@ def get_available_replica(filepath, number_of_replicas):
     pass
 
 
-def upload_file(file, file_path):
+def upload_file(file, file_path, number_of_replicas=3):
     """Upload file"""
     # TODO:
     # from dashboard.models import FileReplica
     #
-    # NUMBER_OF_REPLICAS = 3 # Global var
     # _count = 1
-    # while NUMBER_OF_REPLICAS >= _count:
+    # while number_of_replicas >= _count:
     #     replica_id, upload_result = upload_object.delay(file, file_path + '_' + str(_count))
     #     if upload_result:
     #         replica_status = UPDATE

@@ -147,6 +147,7 @@ def upload_file(request, folder_id=None):
                 new_file.is_folder = False
                 new_file.save()
                 # Save file by hashed id
+                # tasks.upload_file(request.FILES['content'], new_file.path)
                 utils.handle_uploaded_file(request.FILES['content'],
                                            new_file.path)
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
