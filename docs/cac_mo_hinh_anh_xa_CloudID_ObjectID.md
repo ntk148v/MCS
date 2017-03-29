@@ -378,6 +378,7 @@ Cloud\_Server | Virtual\_Node\_Number
 4 | 6
 5 | 5
 6 | 2
+
 Sau khi thêm Cloud Server 7 vào hệ thống, chúng ta thực hiện thay đổi ánh xạ trên một số Virtual Node trong một số VM để chuyển Virtual Node đó ánh xạ sang Cloud Server 7. Các Virtual Node sẽ thay đổi ánh xạ được lựa chọn theo một trong các phương pháp phân phối như Round Robin, most Used...:
 
 ![VM_Node_Add_Cloud_Server_After](./images/Reference_Node_After.png)
