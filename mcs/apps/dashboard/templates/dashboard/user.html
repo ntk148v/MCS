@@ -3,5 +3,41 @@
 <a class="navbar-brand" href="#">User Profile</a>
 {% endblock %}
 {% block main %}
-<!-- Put something here -->
+<div class="row">
+    <div class="col-lg-4 col-md-5">
+        <div class="card card-user">
+            <div class="image"></div>
+                <div class="content">
+                    <div class="author">
+                      <img class="avatar border-white" src="{{ user.profile.image }}" alt="..."/>
+                      <h4 class="title">{{ user.firstname }} {{ user.lastname }}<br />
+                         <a href="#"><small>@username</small></a>
+                      </h4>
+                    </div>
+                    <p class="description text-center">
+                        "Openstack - Cloud Computing <br>
+                    </p>
+                </div>
+        </div>
+    </div>
+    <div class="col-lg-8 col-md-7">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Edit Profile</h4>
+            </div>
+            <div class="content">
+                <form>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Company</label>
+                                <input type="text" class="form-control border-input" placeholder="Company" value="Creative Code Inc.">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

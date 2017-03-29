@@ -33,7 +33,8 @@ class CloudNode(models.Model):
     ip_address = models.GenericIPAddressField(default=None)
     # Hash from ip_address
     identifier = models.CharField('identifier', max_length=255, null=True)
-    status = models.IntegerField(choices=STATUS, blank=True, null=True, default=OK)
+    status = models.IntegerField(choices=STATUS, blank=True,
+                                 null=True, default=OK)
     ring = models.ForeignKey('CloudRing', on_delete=models.CASCADE)
 
     USERNAME_FIELD = 'identifier'
@@ -111,7 +112,8 @@ class File(models.Model):
     name = models.CharField('name', max_length=255)
     # Hash from name
     identifier = models.CharField('identifier', max_length=255, null=True)
-    status = models.IntegerField(choices=STATUS, default=AVAILABLE, null=True, blank=True)
+    status = models.IntegerField(choices=STATUS, default=AVAILABLE,
+                                 null=True, blank=True)
     # owner = models.ForeignKey('User')
     last_modified = models.DateTimeField('last_modified',
                                          auto_now_add=True)
@@ -156,4 +158,5 @@ class FileReplica(models.Model):
     )
 
     identifier = models.CharField('identifier', max_length=255, null=True)
-    status = models.IntegerField(choices=STATUS, default=NOT_UPDATE, null=True, blank=True)
+    status = models.IntegerField(choices=STATUS, default=NOT_UPDATE,
+                                 null=True, blank=True)
