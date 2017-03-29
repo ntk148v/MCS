@@ -1,5 +1,6 @@
 import hashlib
 
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
@@ -50,6 +51,7 @@ def _get_folder(request, folder_id=None, urls={}):
             #                              is_folder=True
             #                              owner=<current_user>)
             folder = File.objects.create(name='root',
+                                         owner=request.user,
                                          is_root=True,
                                          is_folder=True,
                                          path='/rfolder/')
@@ -57,6 +59,7 @@ def _get_folder(request, folder_id=None, urls={}):
     return (folder, url)
 
 
+@login_required(login_url='/auth/login/')
 def list_files(request, folder_id=None):
     folder, url_create = _get_folder(request, folder_id=folder_id,
                                      urls={
@@ -98,6 +101,7 @@ def create_folder(request, folder_id=None):
                 # new_folder.owner = request.user
                 # '/' at the end because it is folder.
                 new_folder.path = folder.path + str(new_folder.name) + '/'
+                new_folder.owner = request.user
                 new_folder.save()
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         else:
@@ -146,6 +150,7 @@ def upload_file(request, folder_id=None):
                 new_file.path = folder.path + str(new_file.name)
                 new_file.size = request.FILES['content'].size
                 new_file.is_folder = False
+                new_file.owner = request.user
                 new_file.save()
                 # Save file by hashed id - temporary
                 utils.handle_uploaded_file(request.FILES['content'],

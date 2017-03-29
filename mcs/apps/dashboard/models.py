@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.contrib.auth.models import User
 from django.db import models
 from dashboard import utils
 
@@ -9,7 +10,7 @@ class CloudRing(models.Model):
         db_table = 'cloudring'
         app_label = 'dashboard'
 
-    USERNAME_FIELD = 'identifier'
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class CloudNode(models.Model):
@@ -114,7 +115,7 @@ class File(models.Model):
     identifier = models.CharField('identifier', max_length=255, null=True)
     status = models.IntegerField(choices=STATUS, default=AVAILABLE,
                                  null=True, blank=True)
-    # owner = models.ForeignKey('User')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     last_modified = models.DateTimeField('last_modified',
                                          auto_now_add=True)
     path = models.CharField('path', null=True, max_length=255)
