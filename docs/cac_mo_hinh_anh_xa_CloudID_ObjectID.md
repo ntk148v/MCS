@@ -191,7 +191,7 @@ Giải pháp được đưa ra ở đây, đó là sử dụng các phương ph�
 1. Xác định số lượng VM có trên Ring: m.
 1. Xác định số lượng Bản sao - Replica của một Data Object: k.
 1. Với mỗi một VM trên Ring, xác định k Virtual Server mà VM đó quản lý sẽ ánh xạ tới k Cloud Server phân biệt nào, với mỗi một Virtual Server sẽ chỉ ánh xạ tới một Cloud Server mà người dùng có. Một Virtual Server được xác định sẽ ánh xạ tới Cloud Server nào dựa trên các thông tin sau:
-    - Số lượng các Virtual Node đã ánh xạ tới từng Cloud Server.
+    - Số lượng các Virtual Server đã ánh xạ tới từng Cloud Server.
     - Dung lượng (weight) của từng Cloud Server.
     - Thuật toán phân phối sử dụng.
 
@@ -220,7 +220,7 @@ Với mô hình này, quá trình Lookup trong hệ thống diễn ra như sau:
 
 #### 3.3.1 Thêm mới một Cloud Server
 
-Khi thêm mới một Cloud Server vào hệ thống, chúng ta thực hiện cân bằng lại - rebalancing hệ thống bằng cách chuyển hướng một số virtual node ánh xạ tới các Cloud Server hiện tại sang Cloud Server mới.
+Khi thêm mới một Cloud Server vào hệ thống, chúng ta thực hiện cân bằng lại - rebalancing hệ thống bằng cách chuyển hướng một số Virtual Server ánh xạ tới các Cloud Server hiện tại sang Cloud Server mới.
 
 Ví dụ về quá trình thêm mới một CloudServer:
 
@@ -228,7 +228,7 @@ Trước khi thêm Cloud Server mới, hệ thống có mô hình như sau:
 
 ![VM_Node_Add_Cloud_Server_Before](./images/VM_Node_Add_Cloud_Server_Before.png)
 
-Trước khi thay đổi, ta có số lượng Virtual Node ánh xạ tới các Cloud Server là:
+Trước khi thay đổi, ta có số lượng Virtual Server ánh xạ tới các Cloud Server là:
 
 Cloud\_Server | Virtual\_Node\_Number
 --------------|----------------------
@@ -238,7 +238,7 @@ Cloud\_Server | Virtual\_Node\_Number
 4 | 4
 5 | 4
 
-Sau khi thêm Cloud Server 6 vào hệ thống, chúng ta thực hiện thay đổi ánh xạ trên một số Virtual Node trong một số VM để chuyển Virtual Node đó ánh xạ sang Cloud Server 6. Các Virtual Node sẽ thay đổi ánh xạ được lựa chọn theo một trong các phương pháp phân phối như Round Robin, most Used...:
+Sau khi thêm Cloud Server 6 vào hệ thống, chúng ta thực hiện thay đổi ánh xạ trên một số Virtual Server trong một số VM để chuyển Virtual Server đó ánh xạ sang Cloud Server 6. Các Virtual Server sẽ thay đổi ánh xạ được lựa chọn theo một trong các phương pháp phân phối như Round Robin, most Used...:
 
 ![VM_Node_Add_Cloud_Server_After](./images/VM_Node_Add_Cloud_Server_After.png)
 
@@ -251,7 +251,7 @@ Cloud\_Server | Virtual\_Node\_Number
 5 | 4
 6 | 4
 
-Sau khi thay đổi ánh xạ của các Virtual Node, chúng ta cần di chuyển các Replica từ Cloud Server cũ sang Cloud Server mới
+Sau khi thay đổi ánh xạ của các Virtual Server, chúng ta cần di chuyển các Replica từ Cloud Server cũ sang Cloud Server mới
 
 #### 3.3.2 Gỡ bỏ một Cloud Server
 
@@ -280,7 +280,7 @@ Cloud\_Server | Virtual\_Node\_Number
 4 | 6
 5 | 5
 
-Tương tự như trong trường hợp thêm mới một Cloud Server, trước khi gỡ bỏ Cloud Server cũ, chúng ta cần di chuyển các Replica từ Cloud Server cũ sang các Cloud Server mà Virtual Node ánh xạ tới trong trạng thái mới.
+Tương tự như trong trường hợp thêm mới một Cloud Server, trước khi gỡ bỏ Cloud Server cũ, chúng ta cần di chuyển các Replica từ Cloud Server cũ sang các Cloud Server mà Virtual Server ánh xạ tới trong trạng thái mới.
 
 ### 3.4 Quản lý thông tin tài khoản người dùng và danh sách các Data Object trong tài khoản người dùng đang thực hiện thay đổi
 
@@ -310,7 +310,7 @@ Vì vậy, giải pháp để giải quyết vấn đề cân bằng dữ liệu
 1. Xác định số lượng Reference Node có trên Ring: m.
 1. Xác định số lượng Bản sao - Replica của một Data Object: k.
 1. Với mỗi một Reference Node trên Ring, tạo ra k Virtual Server trên Reference Node đó. Sau đó, xác định k Virtual Server này ánh xạ tới k Cloud Server phân biệt nào theo một thuật toán phân phối và dựa trên các thông tin sau:
-    - Số lượng các Virtual Node đã ánh xạ tới từng Cloud Server.
+    - Số lượng các Virtual Server đã ánh xạ tới từng Cloud Server.
     - Dung lượng (weight) của từng Cloud Server.
 
 Sau khi xác định được giá trị các Virtual Server trên các Node, bước tiếp theo chúng ta cần thực hiện là Tạo ra Cloud Ring từ các Reference Node, sau đó chuyển Cloud Ring tới tất cả các thực thể (process) có sử dụng Ring để tương tác với Data Object.
@@ -368,7 +368,7 @@ Trước khi người dùng thêm Cloud Server 7, Cloud Ring của người dùn
 
 ![VM_Node_Add_Cloud_Server_Before](./images/Reference_Node_Before.png)
 
-Trước khi thay đổi, ta có số lượng Virtual Node ánh xạ tới các Cloud Server là:
+Trước khi thay đổi, ta có số lượng Virtual Server ánh xạ tới các Cloud Server là:
 
 Cloud\_Server | Virtual\_Node\_Number
 --------------|----------------------
@@ -379,7 +379,7 @@ Cloud\_Server | Virtual\_Node\_Number
 5 | 5
 6 | 2
 
-Sau khi thêm Cloud Server 7 vào hệ thống, chúng ta thực hiện thay đổi ánh xạ trên một số Virtual Node trong một số VM để chuyển Virtual Node đó ánh xạ sang Cloud Server 7. Các Virtual Node sẽ thay đổi ánh xạ được lựa chọn theo một trong các phương pháp phân phối như Round Robin, most Used...:
+Sau khi thêm Cloud Server 7 vào hệ thống, chúng ta thực hiện thay đổi ánh xạ trên một số Virtual Server trong một số VM để chuyển Virtual Server đó ánh xạ sang Cloud Server 7. Các Virtual Server sẽ thay đổi ánh xạ được lựa chọn theo một trong các phương pháp phân phối như Round Robin, most Used...:
 
 ![VM_Node_Add_Cloud_Server_After](./images/Reference_Node_After.png)
 
