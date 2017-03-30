@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.views.generic import TemplateView
 
-from mcs.apps.dashboard.views import files
+from mcs.apps.dashboard.views import files, user
 
 urlpatterns = [
     url(r'^home/$',
@@ -29,6 +29,5 @@ urlpatterns = [
         TemplateView.as_view(template_name='dashboard/settings.html'),
         name='settings'),
     url(r'^user/$',
-        TemplateView.as_view(template_name='dashboard/user.html'),
-        name='user'),
+        user.update_user, name='user')
 ]

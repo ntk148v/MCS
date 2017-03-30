@@ -4,29 +4,33 @@
 {% endblock %}
 {% block main %}
 <div class="row">
-    <div class="col-lg-4 col-md-7">
-        <div class="card card-user">
-            <div class="image"></div>
-                <div class="content">
-                    <div class="author">
-                      <img class="avatar border-white" src="{{ user.profile.image }}" alt="..."/>
-                      <h4 class="title">{{ user.get_full_name }}<br/>
-                         <a href="#"><small>@{{ user.username }}</small></a>
-                      </h4>
+    <form id="user-update-form" action="{% url 'user' %}" method="POST">
+        <div class="col-lg-4 col-md-7">
+            <div class="card card-user">
+                <div class="image"></div>
+                    <div class="content">
+                        <div class="author">
+                          <img class="avatar border-white" src="{{ user.profile.image }}" alt="..."/>
+                          <div class="avatar-upload text-center" style="position: relative">
+                              <label class="btn btn-warning btn-fill">Upload new profile picture</label>
+                              <input type="file" name="image" style="position: absolute; opacity: 0; top: 0; left: 0; right: 0; bottom: 0">
+                          </div>
+                          <h4 class="title">{{ user.get_full_name }}<br/>
+                             <a href="#"><small>@{{ user.username }}</small></a>
+                          </h4>
+                        </div>
+                        <p class="description text-center">
+                            {{ user.profile.bio }}
+                        </p>
                     </div>
-                    <p class="description text-center">
-                        {{ user.profile.bio }}
-                    </p>
-                </div>
-        </div>
-    </div>
-    <div class="col-lg-8 col-md-7">
-        <div class="card">
-            <div class="header">
-                <h4 class="title">Edit Profile</h4>
             </div>
-            <div class="content">
-                <form id="user-update-form" action="{% url 'user' %}" method="POST">
+        </div>
+        <div class="col-lg-8 col-md-7">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">Edit Profile</h4>
+                </div>
+                <div class="content">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-md-6">
@@ -82,9 +86,9 @@
                         <button type="submit" class="btn btn-info btn-fill btn-wd">Update Profile</button>
                     </div>
                     <div class="clearfix"></div>
-                </form>
+                </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 {% endblock %}
